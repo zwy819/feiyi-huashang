@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.exe
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Generated PDF reports
+server/reports/
+
+# 3D 模型文件（体积巨大，不纳入版本控制，通过外部存储/云盘管理）
+*.glb
+*.glb.backup
+*.gltf
+
+# 后端模型上传目录
+server/data/models/
