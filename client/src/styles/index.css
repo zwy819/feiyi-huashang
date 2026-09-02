@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== 全局基础样式 ===== */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: theme('fontFamily.serif');
+  }
+
+  /* 莫高窟风格的滚动条 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: theme('colors.mogao.leadwhite.200');
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: theme('colors.mogao.ochre.400');
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.mogao.ochre.500');
+  }
+}
+
+/* ===== 通用组件样式 ===== */
+@layer components {
+  /* 莫高窟风格卡片 */
+  .card-mogao {
+    @apply bg-white border border-mogao-ochre-200 rounded-lg shadow-mogao
+           transition-shadow duration-300 hover:shadow-mogao-lg;
+  }
+
+  /* 莫高窟风格按钮 - 主色 */
+  .btn-mogao-primary {
+    @apply px-6 py-2.5 bg-mogao-cinnabar text-white font-medium rounded-mogao
+           transition-all duration-300
+           hover:bg-mogao-cinnabar-600 active:bg-mogao-cinnabar-700
+           focus:outline-none focus:ring-2 focus:ring-mogao-cinnabar-400 focus:ring-offset-2;
+  }
+
+  /* 莫高窟风格按钮 - 次色 */
+  .btn-mogao-secondary {
+    @apply px-6 py-2.5 border border-mogao-ochre-400 text-mogao-ochre-700 font-medium rounded-mogao
+           transition-all duration-300
+           hover:bg-mogao-ochre-50 active:bg-mogao-ochre-100
+           focus:outline-none focus:ring-2 focus:ring-mogao-ochre-400 focus:ring-offset-2;
+  }
+
+  /* 标题装饰下划线 */
+  .title-mogao {
+    @apply relative inline-block pb-3;
+  }
+
+  .title-mogao::after {
+    content: '';
+    @apply absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-mogao-cinnabar rounded-full;
+  }
+
+  /* 页面容器 */
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  /* 3D 视口容器 */
+  .viewport-3d {
+    @apply w-full rounded-lg overflow-hidden bg-gradient-to-b from-mogao-leadwhite-100 to-mogao-lapis-50;
+  }
+}
