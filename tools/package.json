@@ -1,0 +1,17 @@
+{
+  "name": "nonlegacy-model-optimizer",
+  "private": true,
+  "type": "module",
+  "description": "GLB 模型优化 — 面数精简 + 纹理压缩，将 Blender 直出的 80MB+ 模型压缩到 5-15MB",
+  "scripts": {
+    "analyze": "node analyze.js",
+    "optimize": "node optimize.js"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.0.0",
+    "@gltf-transform/extensions": "^4.0.0",
+    "@gltf-transform/functions": "^4.0.0",
+    "meshoptimizer": "^0.22.0",
+    "sharp": "^0.33.0"
+  }
+}
