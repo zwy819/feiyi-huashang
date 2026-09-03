@@ -20,6 +20,7 @@ func SetupRouter(
 	favoriteStore *model.FavoriteStore,
 	dailyPickStore *model.DailyPickStore,
 	submissionStore *model.SubmissionStore,
+	commentStore *model.CommentStore,
 	cfg *config.Config,
 ) *gin.Engine {
 	if cfg.AppEnv == "production" {
@@ -51,6 +52,7 @@ func SetupRouter(
 	adminGarmentHandler := handler.NewAdminGarmentHandler(garmentStore)
 	dashboardHandler := handler.NewAdminDashboardHandler(garmentStore, modelStore, userStore, favoriteStore)
 	submissionHandler := handler.NewSubmissionHandler(submissionStore, submissionService, garmentStore, modelStore)
+	commentHandler := handler.NewCommentHandler(commentStore, garmentStore)
 
 	// --- Public Routes ---
 	api := r.Group("/api")
@@ -116,6 +118,9 @@ func SetupRouter(
 
 		// Submission image — 公开图片访问
 		api.GET("/submissions/:id/image", submissionHandler.ServeImage)
+
+		// Comments — 评论列表（可选登录：登录后额外可见自己的待审核/已驳回评论）
+		api.GET("/comments", middleware.JWT(cfg.JWTSecret, false), commentHandler.List)
 	}
 
 	// --- User Routes (JWT required) ---
@@ -128,6 +133,16 @@ func SetupRouter(
 			submissions.GET("", submissionHandler.ListMy)
 			submissions.GET("/:id", submissionHandler.GetMy)
 				submissions.PUT("/:id/retract", submissionHandler.Retract)
+		}
+
+		// Comments — 评论写操作（发表 / 编辑 / 删除 / 点赞）
+		comments := userRoutes.Group("/comments")
+		{
+			comments.POST("", commentHandler.Create)
+			comments.PUT("/:id", commentHandler.Update)
+			comments.DELETE("/:id", commentHandler.Delete)
+			comments.POST("/:id/like", commentHandler.Like)
+			comments.DELETE("/:id/like", commentHandler.Unlike)
 		}
 	}
 
@@ -162,6 +177,15 @@ func SetupRouter(
 			adminSubmissions.PUT("/:id/reject", submissionHandler.AdminReject)
 			adminSubmissions.PUT("/:id/complete", submissionHandler.AdminComplete)
 			adminSubmissions.DELETE("/:id", submissionHandler.AdminDelete)
+		}
+
+		// 评论审核
+		adminComments := admin.Group("/comments")
+		{
+			adminComments.GET("", commentHandler.AdminList)
+			adminComments.PUT("/:id/approve", commentHandler.AdminApprove)
+			adminComments.PUT("/:id/reject", commentHandler.AdminReject)
+			adminComments.DELETE("/:id", commentHandler.AdminDelete)
 		}
 	}
 

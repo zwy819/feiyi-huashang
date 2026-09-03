@@ -150,6 +150,36 @@ func RunMigrations(db *sql.DB) error {
 		`ALTER TABLE submissions_v2 RENAME TO submissions`,
 		`CREATE INDEX IF NOT EXISTS idx_submissions_user_id ON submissions(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status)`,
+
+		// 服饰评论表（需管理员审核后公开）
+		`CREATE TABLE IF NOT EXISTS comments (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			garment_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			content TEXT NOT NULL,
+			status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
+			reject_reason TEXT DEFAULT '',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (garment_id) REFERENCES garments(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_comments_garment_id ON comments(garment_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_comments_status ON comments(status)`,
+
+		// 评论点赞表
+		`CREATE TABLE IF NOT EXISTS comment_likes (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			comment_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(comment_id, user_id),
+			FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_comment_likes_comment_id ON comment_likes(comment_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_comment_likes_user_id ON comment_likes(user_id)`,
 	}
 
 	for i, m := range migrations {

@@ -47,6 +47,7 @@ func main() {
 	favoriteStore := model.NewFavoriteStore(db)
 	dailyPickStore := model.NewDailyPickStore(db)
 	submissionStore := model.NewSubmissionStore(db)
+	commentStore := model.NewCommentStore(db)
 
 	// 插入种子数据
 	if *seed {
@@ -54,7 +55,7 @@ func main() {
 	}
 
 	// 设置路由
-	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, cfg)
+	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, commentStore, cfg)
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%s", cfg.Port)
