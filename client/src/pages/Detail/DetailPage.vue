@@ -105,6 +105,9 @@
         </router-link>
       </div>
     </div>
+
+    <!-- 评论区 -->
+    <CommentSection v-if="garment" :garment-id="garment.id" />
   </div>
 </template>
 
@@ -114,6 +117,7 @@ import { useRoute, useRouter, type RouteLocationNormalizedLoaded, type Router } 
 import { garmentAPI, favoriteAPI } from '@/services/api'
 import ModelViewer from '@/components/3D/ModelViewer.vue'
 import Skeleton from '@/components/Common/Skeleton.vue'
+import CommentSection from '@/components/Comments/CommentSection.vue'
 import type { Garment, RecommendItem } from '@/types/garment'
 import type { ApiResponse } from '@/types/api'
 import type { FavoriteCheckResult } from '@/types/favorite'

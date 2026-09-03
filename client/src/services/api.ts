@@ -16,6 +16,7 @@ import type {
 } from '@/types/statistics'
 import type { FavoriteItem, FavoriteCheckResult } from '@/types/favorite'
 import type { Submission } from '@/types/submission'
+import type { Comment } from '@/types/comment'
 
 /**
  * API 客户端配置
@@ -257,6 +258,51 @@ export const adminSubmissionAPI = {
   /** 管理员删除投稿（含图片文件） */
   remove: (id: number) =>
     api.delete<unknown, ApiResponse<null>>(`/admin/submissions/${id}`),
+}
+
+// ===== 评论相关 API =====
+export const commentAPI = {
+  /** 获取服饰评论列表（公开，登录后可见自己的待审核/已驳回评论） */
+  list: (params: { garment_id: number; page?: number; limit?: number }) =>
+    api.get<unknown, ApiResponse<PaginatedData<Comment>>>('/comments', { params }),
+
+  /** 发表评论（审核通过后公开） */
+  create: (data: { garment_id: number; content: string }) =>
+    api.post<unknown, ApiResponse<Comment>>('/comments', data),
+
+  /** 编辑自己的评论（重新进入审核） */
+  update: (id: number, content: string) =>
+    api.put<unknown, ApiResponse<Comment>>(`/comments/${id}`, { content }),
+
+  /** 删除自己的评论 */
+  remove: (id: number) =>
+    api.delete<unknown, ApiResponse<null>>(`/comments/${id}`),
+
+  /** 点赞评论 */
+  like: (id: number) =>
+    api.post<unknown, ApiResponse<Comment>>(`/comments/${id}/like`),
+
+  /** 取消点赞 */
+  unlike: (id: number) =>
+    api.delete<unknown, ApiResponse<Comment>>(`/comments/${id}/like`),
+}
+
+export const adminCommentAPI = {
+  /** 管理员获取评论列表（可按状态筛选） */
+  list: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get<unknown, ApiResponse<PaginatedData<Comment>>>('/admin/comments', { params }),
+
+  /** 管理员审核通过评论 */
+  approve: (id: number) =>
+    api.put<unknown, ApiResponse<null>>(`/admin/comments/${id}/approve`),
+
+  /** 管理员驳回评论 */
+  reject: (id: number, reject_reason: string) =>
+    api.put<unknown, ApiResponse<null>>(`/admin/comments/${id}/reject`, { reject_reason }),
+
+  /** 管理员删除评论 */
+  remove: (id: number) =>
+    api.delete<unknown, ApiResponse<null>>(`/admin/comments/${id}`),
 }
 
 export default api
