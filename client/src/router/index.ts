@@ -95,6 +95,11 @@ const routes: RouteRecordRaw[] = [
             name: 'AdminSubmissions',
             component: () => import('@/pages/Admin/SubmissionsPage.vue'),
           },
+          {
+            path: 'comments',
+            name: 'AdminComments',
+            component: () => import('@/pages/Admin/CommentsPage.vue'),
+          },
         ],
       },
     ],

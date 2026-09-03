@@ -57,6 +57,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: '/admin', icon: '📊', label: '仪表盘', exact: true },
   { to: '/admin/submissions', icon: '📨', label: '投稿审核' },
+  { to: '/admin/comments', icon: '💬', label: '评论审核' },
   { to: '/admin/models', icon: '📦', label: '模型管理' },
   { to: '/admin/garments', icon: '👘', label: '服饰管理' },
 ]
