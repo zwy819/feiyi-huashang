@@ -83,6 +83,15 @@ func seedData(
 	db.Exec("DELETE FROM favorites")
 	db.Exec("DELETE FROM models")
 	db.Exec("DELETE FROM garments")
+	// 模型行已清空，同步清掉旧的模型文件目录（保留 submissions 图片目录），
+	// 避免重复 -seed 时按新自增 ID 不断生成孤儿目录
+	if entries, err := os.ReadDir(cfg.UploadDir); err == nil {
+		for _, e := range entries {
+			if e.IsDir() && e.Name() != "submissions" {
+				os.RemoveAll(filepath.Join(cfg.UploadDir, e.Name()))
+			}
+		}
+	}
 	log.Println("[Seed] 已清理旧种子数据")
 
 	// 创建管理员用户
@@ -128,7 +137,6 @@ func seedData(
 			Name: "苗族银衣", Dynasty: "清", Ethnic: "苗族", Craft: "银饰锻造+刺绣",
 			Material: "棉布+银", Pattern: "龙凤纹+花卉纹", CulturalMeaning: "银饰象征着财富与吉祥，也是苗族人民驱邪避凶的护身符，代代相传的银匠技艺承载着苗族的民族记忆",
 			Province: "贵州", Description: "苗族银衣是苗族盛装中最华丽的服饰，全身缀满手工打制的银片、银铃和银角，单件重量可达十余公斤，是苗族银饰锻造技艺的集大成之作。",
-			ModelFile: "苗族百褶裙.glb",
 		},
 		{
 			Name: "侗族亮布衣", Dynasty: "清", Ethnic: "侗族", Craft: "亮布制作+刺绣",
@@ -175,7 +183,6 @@ func seedData(
 			Name: "彝族擦尔瓦", Dynasty: "清", Ethnic: "彝族", Craft: "羊毛擀毡+挑花",
 			Material: "羊毛", Pattern: "几何条纹+日月纹", CulturalMeaning: "擦尔瓦是彝族人民的身份象征，羊毛的白色代表纯洁与高贵，披毡的形制体现了彝族适应高寒山区的生存智慧",
 			Province: "四川", Description: "彝族擦尔瓦为羊毛擀制的披毡，质地厚实保暖，边缘饰有精美的挑花图案。白天为衣，夜间为被，是彝族人民在高寒山区生活中的必备之物。",
-			ModelFile: "彝族.glb",
 		},
 		{
 			Name: "羌族云云鞋", Dynasty: "现代", Ethnic: "羌族", Craft: "挑花刺绣",
@@ -199,7 +206,6 @@ func seedData(
 			Name: "藏族邦典围裙", Dynasty: "现代", Ethnic: "藏族", Craft: "氆氇织造",
 			Material: "羊毛+丝线", Pattern: "彩虹条纹", CulturalMeaning: "邦典围裙的彩色条纹象征彩虹，是藏族女性成年的标志，每一种颜色代表一种美好的祝福",
 			Province: "西藏", Description: "邦典围裙是藏族已婚女性的标志性服饰，以彩色羊毛和丝线编织成横向彩虹条纹，色彩明快。日喀则地区的邦典织造技艺尤为精湛，已被列入国家级非物质文化遗产。",
-			ModelFile: "藏族氆氇袍.glb",
 		},
 		{
 			Name: "门巴族氆氇袍", Dynasty: "清", Ethnic: "门巴族", Craft: "氆氇织造",
@@ -255,7 +261,7 @@ func seedData(
 			Name: "蒙古族长袍", Dynasty: "元", Ethnic: "蒙古族", Craft: "镶边刺绣",
 			Material: "绸缎", Pattern: "云纹+动物纹", CulturalMeaning: "象征蒙古族对草原和自然的敬畏，展现了游牧民族的豪迈气概",
 			Province: "内蒙古", Description: "蒙古族长袍以其宽大的版型和精美的镶边工艺著称，适应草原游牧生活的需要，兼具实用性与艺术性。",
-			ModelFile: "蒙古族喀尔喀袍.glb",
+			ModelFile: "蒙古族长袍.glb",
 		},
 		{
 			Name: "蒙古族喀尔喀袍", Dynasty: "清", Ethnic: "蒙古族", Craft: "镶边+贴花刺绣",
