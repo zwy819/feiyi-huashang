@@ -109,17 +109,27 @@ Browser (localhost:5173)
 | 14 | `GET` | `/api/statistics/overview` | 概览统计 | — | ✅ |
 | 15 | `GET` | `/api/report/generate?ids=1,2,3` | 生成 PDF 报告 | — | ✅ |
 | 16 | `GET` | `/api/health` | 健康检查 | — | ✅ |
-| 17 | `GET` | `/api/comments` | 服饰评论列表 | — | 📋 规划中 |
-| 18 | `POST` | `/api/comments` | 发表评论 | JWT | 📋 规划中 |
-| 19 | `PUT` | `/api/comments/:id` | 编辑评论 | JWT | 📋 规划中 |
-| 20 | `DELETE` | `/api/comments/:id` | 删除评论 | JWT | 📋 规划中 |
-| 21 | `POST` | `/api/comments/:id/like` | 点赞评论 | JWT | 📋 规划中 |
-| 22 | `DELETE` | `/api/comments/:id/like` | 取消点赞 | JWT | 📋 规划中 |
+| 17 | `GET` | `/api/comments` | 服饰评论列表（可选登录） | 可选JWT | ✅ |
+| 18 | `POST` | `/api/comments` | 发表评论 | JWT | ✅ |
+| 19 | `PUT` | `/api/comments/:id` | 编辑评论 | JWT | ✅ |
+| 20 | `DELETE` | `/api/comments/:id` | 删除评论 | JWT | ✅ |
+| 21 | `POST` | `/api/comments/:id/like` | 点赞评论 | JWT | ✅ |
+| 22 | `DELETE` | `/api/comments/:id/like` | 取消点赞 | JWT | ✅ |
 | 23 | `GET` | `/api/statistics/province/:name` | 省份下钻数据 | — | 📋 规划中 |
-| 24 | `GET` | `/api/statistics/sankey` | 朝代-民族-工艺流向 | — | 📋 规划中 |
+| 24 | `GET` | `/api/statistics/sankey` | 朝代-民族-工艺流向 | — | ✅ |
 | 25 | `GET` | `/api/statistics/by-ethnic` | 按民族统计 | — | 📋 规划中 |
 | 26 | `GET` | `/api/statistics/by-dynasty` | 按朝代统计 | — | 📋 规划中 |
 | 27 | `GET` | `/api/garments/:id/image` | 服饰预览图 | — | 📋 规划中 |
+| 28 | `GET` | `/api/garments/:id/annotations` | 服饰热点标注列表 | — | ✅ |
+| 29 | `GET` | `/api/admin/annotations` | 热点标注列表（管理） | JWT+admin | ✅ |
+| 30 | `POST` | `/api/admin/annotations` | 创建热点标注 | JWT+admin | ✅ |
+| 31 | `PUT` | `/api/admin/annotations/:id` | 更新热点标注 | JWT+admin | ✅ |
+| 32 | `DELETE` | `/api/admin/annotations/:id` | 删除热点标注 | JWT+admin | ✅ |
+| 33 | `GET` | `/api/quiz/questions?count=10` | 生成问答题目 | — | ✅ |
+| 34 | `POST` | `/api/quiz/check` | 单题即时判定 | — | ✅ |
+| 35 | `POST` | `/api/quiz/submit` | 提交判分（未登录不记录） | 可选JWT | ✅ |
+| 36 | `GET` | `/api/quiz/leaderboard` | 答题排行榜 | — | ✅ |
+| 37 | `GET` | `/api/quiz/records` | 我的答题战绩 | JWT | ✅ |
 
 > 详细请求/响应格式参见 `docs/API(1).md`。
 

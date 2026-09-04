@@ -1154,6 +1154,151 @@ users (1) ──< (N) favorites (N) >── (1) garments
 | `pick_date` | DATE | UNIQUE NOT NULL | 推荐日期 |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | 创建时间 |
 
+### 11.7 annotations 表（3D 模型热点标注）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| `id` | INTEGER | PK AUTOINCREMENT | 标注 ID |
+| `garment_id` | INTEGER | FK→garments(id) ON DELETE CASCADE | 服饰 ID |
+| `title` | TEXT | NOT NULL | 标注标题（≤100 字） |
+| `content` | TEXT | — | 讲解正文（≤1000 字） |
+| `position_x` | REAL | NOT NULL DEFAULT 0 | 热点 X 坐标（展示场景世界坐标） |
+| `position_y` | REAL | NOT NULL DEFAULT 0 | 热点 Y 坐标 |
+| `position_z` | REAL | NOT NULL DEFAULT 0 | 热点 Z 坐标 |
+| `sort_order` | INTEGER | DEFAULT 0 | 排序权重（越小越靠前） |
+| `created_at` / `updated_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | 时间戳 |
+
+**索引：** `garment_id`
+
+> 坐标约定：前端 Three.js 将模型包围盒平移居中后不旋转（OrbitControls 只旋转相机），因此展示场景的世界坐标对同一模型稳定可复现。管理后台编辑器内点选模型表面即写入射线交点坐标。
+
+### 11.8 quiz_records 表（华裳问答战绩）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| `id` | INTEGER | PK AUTOINCREMENT | 记录 ID |
+| `user_id` | INTEGER | FK→users(id) ON DELETE CASCADE | 用户 ID |
+| `score` | INTEGER | DEFAULT 0 | 得分（每题 10 分） |
+| `total` | INTEGER | DEFAULT 0 | 题目总数 |
+| `correct_count` | INTEGER | DEFAULT 0 | 答对题数 |
+| `duration_seconds` | INTEGER | DEFAULT 0 | 答题用时（秒） |
+| `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | 创建时间 |
+
+**索引：** `user_id`、`score`
+
+---
+
+## 12. 热点标注模块（新增）
+
+> 3D 模型上的纹样/工艺讲解点。查看端在详情页 3D 视图上渲染可点击圆点；管理端在「后台 → 热点标注」中维护，编辑器支持点选模型表面放置热点。
+
+### 12.1 服饰标注列表
+
+```
+GET /api/garments/:id/annotations
+```
+
+**成功响应 (200)：** `data` 为标注数组（按 `sort_order` 升序），字段见 11.7。
+
+### 12.2 管理端接口（JWT + admin）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/admin/annotations?garment_id=1` | 标注列表（可按服饰过滤，含 `garment_name`） |
+| `POST` | `/api/admin/annotations` | 创建标注 |
+| `PUT` | `/api/admin/annotations/:id` | 更新标注 |
+| `DELETE` | `/api/admin/annotations/:id` | 删除标注 |
+
+**创建/更新请求体：**
+
+```json
+{
+  "garment_id": 1,
+  "title": "蜡染底纹",
+  "content": "以铜刀蘸熔蜡绘于布面…",
+  "position_x": 0.0,
+  "position_y": -0.0466,
+  "position_z": 0.2285,
+  "sort_order": 0
+}
+```
+
+**错误码：** `40001` 参数缺失 / `40002` 标题超 100 字或内容超 1000 字 / `40401` 服饰或标注不存在
+
+---
+
+## 13. 华裳问答模块（新增）
+
+> 从服饰库字段（民族/朝代/省份/工艺/纹样/名称）自动出题。题目响应不包含答案；单题选择后通过 `/check` 即时判定；最终得分以 `/submit` 的服务端判分为准（每题 10 分）。
+
+### 13.1 生成题目
+
+```
+GET /api/quiz/questions?count=10
+```
+
+- `count`：1-20，默认 10
+- **成功响应 (200)：**
+
+```json
+{
+  "code": 0,
+  "data": {
+    "questions": [
+      {
+        "id": "q1",
+        "garment_id": 1,
+        "field": "ethnic",
+        "type": "ethnic",
+        "stem": "「苗族百褶裙」来自哪个民族？",
+        "options": ["苗族", "侗族", "布依族", "彝族"],
+        "explanation": "象征苗族人民对自然和生命的崇敬…"
+      }
+    ]
+  }
+}
+```
+
+### 13.2 单题即时判定
+
+```
+POST /api/quiz/check
+```
+
+**请求体：** `{ "garment_id": 1, "field": "ethnic", "choice": "苗族" }`
+
+**响应 data：** `{ "correct": true, "answer": "苗族" }`
+
+### 13.3 提交判分（可选登录）
+
+```
+POST /api/quiz/submit
+```
+
+**请求体：**
+
+```json
+{
+  "duration_seconds": 42,
+  "answers": [
+    { "garment_id": 1, "field": "ethnic", "choice": "苗族" },
+    { "garment_id": 21, "field": "name", "choice": "苏绣旗袍" }
+  ]
+}
+```
+
+- 服务端按 `garment_id` + `field` 重查服饰真实值判分，`field` 限白名单（`name/dynasty/ethnic/province/craft/pattern`）
+- 携带有效 JWT 时写入 `quiz_records`；未登录仅返回判分结果不记录成绩
+
+**响应 data：** `{ "score", "total", "correct_count", "best_score", "duration", "results": [{garment_id, field, choice, answer, correct}] }`
+
+### 13.4 排行榜 / 个人战绩
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/quiz/leaderboard?limit=10` | 每用户最高分 Top N（公开） |
+| `GET` | `/api/quiz/records?limit=10` | 我的最近战绩 + 历史最高分（JWT） |
+
 ---
 
 ## 附录 A：接口速查表
@@ -1187,6 +1332,16 @@ users (1) ──< (N) favorites (N) >── (1) garments
 | 25 | `PUT` | `/api/admin/garments/:id` | 更新服饰 | JWT+admin | — |
 | 26 | `DELETE` | `/api/admin/garments/:id` | 删除服饰 | JWT+admin | — |
 | 27 | `GET` | `/api/health` | 健康检查 | — | — |
+| 28 | `GET` | `/api/garments/:id/annotations` | 服饰热点标注列表 | — | ✅ |
+| 29 | `GET` | `/api/admin/annotations` | 标注列表（管理） | JWT+admin | ✅ |
+| 30 | `POST` | `/api/admin/annotations` | 创建标注 | JWT+admin | ✅ |
+| 31 | `PUT` | `/api/admin/annotations/:id` | 更新标注 | JWT+admin | ✅ |
+| 32 | `DELETE` | `/api/admin/annotations/:id` | 删除标注 | JWT+admin | ✅ |
+| 33 | `GET` | `/api/quiz/questions` | 生成问答题目 | — | ✅ |
+| 34 | `POST` | `/api/quiz/check` | 单题即时判定 | — | ✅ |
+| 35 | `POST` | `/api/quiz/submit` | 提交判分（可选登录） | 可选JWT | ✅ |
+| 36 | `GET` | `/api/quiz/leaderboard` | 答题排行榜 | — | ✅ |
+| 37 | `GET` | `/api/quiz/records` | 我的答题战绩 | JWT | ✅ |
 
 ## 附录 B：种子数据一览
 
