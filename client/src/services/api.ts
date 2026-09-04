@@ -17,6 +17,14 @@ import type {
 import type { FavoriteItem, FavoriteCheckResult } from '@/types/favorite'
 import type { Submission } from '@/types/submission'
 import type { Comment } from '@/types/comment'
+import type { Annotation, AnnotationPayload } from '@/types/annotation'
+import type {
+  QuizAnswerItem,
+  QuizLeaderboardItem,
+  QuizMyRecords,
+  QuizQuestion,
+  QuizSubmitResult,
+} from '@/types/quiz'
 
 /**
  * API 客户端配置
@@ -303,6 +311,58 @@ export const adminCommentAPI = {
   /** 管理员删除评论 */
   remove: (id: number) =>
     api.delete<unknown, ApiResponse<null>>(`/admin/comments/${id}`),
+}
+
+// ===== 热点标注相关 API =====
+export const annotationAPI = {
+  /** 获取某服饰的热点标注列表（公开） */
+  listByGarment: (garmentId: number) =>
+    api.get<unknown, ApiResponse<Annotation[]>>(`/garments/${garmentId}/annotations`),
+}
+
+export const adminAnnotationAPI = {
+  /** 管理员获取标注列表（可按服饰过滤，含服饰名称） */
+  list: (params?: { garment_id?: number }) =>
+    api.get<unknown, ApiResponse<Annotation[]>>('/admin/annotations', { params }),
+
+  /** 管理员创建标注 */
+  create: (data: AnnotationPayload & { garment_id: number }) =>
+    api.post<unknown, ApiResponse<Annotation>>('/admin/annotations', data),
+
+  /** 管理员更新标注 */
+  update: (id: number, data: AnnotationPayload) =>
+    api.put<unknown, ApiResponse<Annotation>>(`/admin/annotations/${id}`, data),
+
+  /** 管理员删除标注 */
+  remove: (id: number) =>
+    api.delete<unknown, ApiResponse<null>>(`/admin/annotations/${id}`),
+}
+
+// ===== 华裳问答相关 API =====
+export const quizAPI = {
+  /** 生成题目（公开，题目不含答案） */
+  getQuestions: (count: number) =>
+    api.get<unknown, ApiResponse<{ questions: QuizQuestion[] }>>('/quiz/questions', {
+      params: { count },
+    }),
+
+  /** 提交判分（可选登录：未登录判分但不记录成绩） */
+  submit: (data: { duration_seconds: number; answers: QuizAnswerItem[] }) =>
+    api.post<unknown, ApiResponse<QuizSubmitResult>>('/quiz/submit', data),
+
+  /** 单题即时判定（选择后返回正误与正确答案） */
+  check: (data: QuizAnswerItem) =>
+    api.post<unknown, ApiResponse<{ correct: boolean; answer: string }>>('/quiz/check', data),
+
+  /** 排行榜（每用户最高分） */
+  leaderboard: (limit = 10) =>
+    api.get<unknown, ApiResponse<{ items: QuizLeaderboardItem[] }>>('/quiz/leaderboard', {
+      params: { limit },
+    }),
+
+  /** 我的战绩（需登录） */
+  myRecords: () =>
+    api.get<unknown, ApiResponse<QuizMyRecords>>('/quiz/records'),
 }
 
 export default api

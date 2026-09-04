@@ -142,6 +142,7 @@ const navItems: NavItem[] = [
   { to: '/',          label: '每日一服' },
   { to: '/explore',   label: '服饰浏览' },
   { to: '/statistics',label: '地理分布' },
+  { to: '/quiz',      label: '华裳问答' },
   { to: '/favorites', label: '我的收藏' },
   { to: '/submit',          label: '上传投稿' },
   { to: '/my-submissions', label: '我的投稿' },

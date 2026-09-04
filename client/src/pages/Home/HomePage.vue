@@ -114,7 +114,7 @@
         <h2 class="text-center title-mogao font-serif text-2xl font-bold text-mogao-lapis-800 mb-10">
           探索非遗服饰
         </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <router-link
             v-for="item in exploreModules"
             :key="item.to"
@@ -165,6 +165,7 @@ const modelPath = computed(() => {
 const exploreModules: ExploreModule[] = [
   { icon: '☷', title: '服饰浏览', desc: '按朝代、民族、工艺筛选', to: '/explore', color: 'cinnabar' },
   { icon: '◎', title: '地理分布', desc: '查看全国非遗服饰分布', to: '/statistics', color: 'malachite' },
+  { icon: '🎯', title: '华裳问答', desc: '答题闯关涨知识赢积分', to: '/quiz', color: 'gold' },
   { icon: '♡', title: '我的收藏', desc: '收藏喜欢的服饰', to: '/favorites', color: 'lapis' },
 ]
 

@@ -22,14 +22,51 @@
     <div v-else class="grid grid-cols-1 lg:grid-cols-5 gap-8">
       <!-- 左侧：3D 预览 -->
       <div class="lg:col-span-3">
-        <div class="card-mogao overflow-hidden">
+        <div class="card-mogao overflow-hidden relative">
           <ModelViewer
             v-if="modelPath"
+            ref="viewerRef"
             :model-path="modelPath"
             :auto-rotate="true"
             :height="480"
+            :annotations="annotations"
+            @hotspot-click="onHotspotClick"
           />
-          <div v-else class="aspect-video bg-gradient-to-br from-mogao-lapis-50 to-mogao-ochre-50 flex items-center justify-center">
+
+          <!-- 生成分享图 -->
+          <button
+            v-if="garment"
+            @click="openShare"
+            class="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs text-white transition-all duration-300 hover:scale-105"
+            style="background: rgba(60, 50, 40, 0.45); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);"
+          >
+            <span>&#x1f4f7;</span>
+            生成分享图
+          </button>
+
+          <!-- 热点讲解卡片 -->
+          <Transition name="annotation-fade">
+            <div
+              v-if="activeAnnotation"
+              class="absolute top-4 right-4 z-30 w-64 bg-mogao-leadwhite-50/95 backdrop-blur border border-mogao-ochre-200 rounded-lg shadow-mogao-lg p-4"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <h4 class="font-serif font-semibold text-mogao-lapis-800 text-sm leading-snug">
+                  {{ activeAnnotation.title }}
+                </h4>
+                <button
+                  @click="activeAnnotation = null"
+                  class="text-mogao-ochre-400 hover:text-mogao-cinnabar transition-colors leading-none text-lg"
+                  aria-label="关闭讲解"
+                >&times;</button>
+              </div>
+              <p class="text-xs text-mogao-lapis-600 leading-relaxed mt-2">
+                {{ activeAnnotation.content }}
+              </p>
+            </div>
+          </Transition>
+
+          <div v-if="!modelPath" class="aspect-video bg-gradient-to-br from-mogao-lapis-50 to-mogao-ochre-50 flex items-center justify-center">
             <div class="text-center">
               <span class="text-6xl block mb-3">&#x1f457;</span>
               <p class="text-sm text-mogao-ochre-500">3D 服饰展示</p>
@@ -85,6 +122,14 @@
       </div>
     </div>
 
+    <!-- 分享卡片弹窗 -->
+    <ShareCardModal
+      :is-open="shareOpen"
+      :garment="garment"
+      :screenshot="shareScreenshot"
+      @close="shareOpen = false"
+    />
+
     <!-- 智能推荐链 -->
     <div v-if="recommends.length > 0" class="mt-12">
       <h2 class="title-mogao font-serif text-xl font-bold text-mogao-lapis-800 mb-6">
@@ -114,13 +159,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, type Ref, type ComputedRef } from 'vue'
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded, type Router } from 'vue-router'
-import { garmentAPI, favoriteAPI } from '@/services/api'
+import { garmentAPI, favoriteAPI, annotationAPI } from '@/services/api'
 import ModelViewer from '@/components/3D/ModelViewer.vue'
+import ShareCardModal from '@/components/3D/ShareCardModal.vue'
 import Skeleton from '@/components/Common/Skeleton.vue'
 import CommentSection from '@/components/Comments/CommentSection.vue'
 import type { Garment, RecommendItem } from '@/types/garment'
 import type { ApiResponse } from '@/types/api'
 import type { FavoriteCheckResult } from '@/types/favorite'
+import type { Annotation } from '@/types/annotation'
 
 const route: RouteLocationNormalizedLoaded = useRoute()
 const router: Router = useRouter()
@@ -128,6 +175,22 @@ const garment: Ref<Garment | null> = ref(null)
 const recommends: Ref<RecommendItem[]> = ref([])
 const loading: Ref<boolean> = ref(true)
 const isFavored: Ref<boolean> = ref(false)
+const annotations: Ref<Annotation[]> = ref([])
+const activeAnnotation: Ref<Annotation | null> = ref(null)
+
+// 分享卡片
+const viewerRef = ref<InstanceType<typeof ModelViewer> | null>(null)
+const shareOpen: Ref<boolean> = ref(false)
+const shareScreenshot: Ref<string | null> = ref(null)
+
+function openShare(): void {
+  shareScreenshot.value = viewerRef.value?.capture() ?? null
+  shareOpen.value = true
+}
+
+function onHotspotClick(annotation: Annotation): void {
+  activeAnnotation.value = annotation
+}
 
 const attributes: ComputedRef<[string, string][]> = computed(() => {
   if (!garment.value) return []
@@ -150,6 +213,19 @@ const modelPath = computed(() => {
 
 async function loadDetail(id: string | number): Promise<void> {
   loading.value = true
+  annotations.value = []
+  activeAnnotation.value = null
+
+  // 热点标注独立加载（失败不影响主内容展示）
+  annotationAPI
+    .listByGarment(Number(id))
+    .then((res) => {
+      annotations.value = (res as ApiResponse<Annotation[]>).data || []
+    })
+    .catch(() => {
+      annotations.value = []
+    })
+
   try {
     const requests: Promise<unknown>[] = [
       garmentAPI.getById(Number(id)),
@@ -223,3 +299,15 @@ async function toggleFavorite(): Promise<void> {
   }
 }
 </script>
+
+<style scoped>
+.annotation-fade-enter-active,
+.annotation-fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.annotation-fade-enter-from,
+.annotation-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+</style>

@@ -42,6 +42,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/Statistics/StatisticsPage.vue'),
       },
       {
+        path: 'quiz',
+        name: 'Quiz',
+        component: () => import('@/pages/Quiz/QuizPage.vue'),
+      },
+      {
         path: 'report',
         name: 'Report',
         component: () => import('@/pages/Report/ReportPage.vue'),
@@ -99,6 +104,11 @@ const routes: RouteRecordRaw[] = [
             path: 'comments',
             name: 'AdminComments',
             component: () => import('@/pages/Admin/CommentsPage.vue'),
+          },
+          {
+            path: 'annotations',
+            name: 'AdminAnnotations',
+            component: () => import('@/pages/Admin/AnnotationAdminPage.vue'),
           },
         ],
       },

@@ -59,6 +59,39 @@
       </div>
     </div>
 
+    <!-- 热点标注层（投影驱动的 HTML 圆点，指针事件仅落在圆点上） -->
+    <div
+      v-if="hotspotsActive"
+      class="absolute inset-0 z-10 pointer-events-none"
+    >
+      <button
+        v-for="(spot, i) in visibleHotspots"
+        :key="spot.annotation.id"
+        class="hotspot-dot"
+        :class="{ 'hotspot-dot--active': activeAnnotationId === spot.annotation.id }"
+        :style="{ left: `${spot.x}px`, top: `${spot.y}px`, opacity: spot.visible ? undefined : 0.3 }"
+        :title="spot.annotation.title"
+        :aria-label="`讲解点：${spot.annotation.title}`"
+        @click.stop="onHotspotClick(spot.annotation)"
+      >{{ i + 1 }}</button>
+    </div>
+
+    <!-- 讲解点开关（放置模式下预览点常显，无需开关） -->
+    <div
+      v-if="!placementMode && annotations.length > 0 && modelPath && !loadError && !webglLost"
+      class="absolute bottom-3 left-3 z-20"
+    >
+      <button
+        @click="showAnnotations = !showAnnotations"
+        class="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs text-white transition-all duration-300 hover:scale-105"
+        style="background: rgba(60, 50, 40, 0.45); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);"
+      >
+        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px]"
+          :class="showAnnotations ? 'bg-mogao-cinnabar' : 'bg-white/25'">&#x1f3f7;</span>
+        {{ showAnnotations ? '隐藏讲解点' : '显示讲解点' }}
+      </button>
+    </div>
+
     <!-- 背景选择器 -->
     <div
       v-if="showBackgroundPicker && modelPath && !loadError && !webglLost"
@@ -81,10 +114,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, nextTick, type Ref } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted, nextTick, type Ref } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { loadModel } from './ModelLoader'
+import type { Annotation } from '@/types/annotation'
 
 interface Props {
   modelPath?: string
@@ -94,6 +128,10 @@ interface Props {
   background?: string
   /** 是否显示背景选择器 */
   showBackgroundPicker?: boolean
+  /** 热点标注（纹样/工艺讲解点，坐标为展示场景世界坐标） */
+  annotations?: Annotation[]
+  /** 放置模式：单击模型表面时触发 surface-click（管理后台选点用） */
+  placementMode?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -102,7 +140,14 @@ const props = withDefaults(defineProps<Props>(), {
   height: 480,
   background: 'white',
   showBackgroundPicker: true,
+  annotations: () => [],
+  placementMode: false,
 })
+
+const emit = defineEmits<{
+  (e: 'hotspot-click', annotation: Annotation): void
+  (e: 'surface-click', position: { x: number; y: number; z: number }): void
+}>()
 
 interface HTMLElementWithCleanup extends HTMLCanvasElement {
   _webglCleanup?: () => void
@@ -150,6 +195,91 @@ const loading: Ref<boolean> = ref(true)
 const loadError: Ref<string | null> = ref(null)
 const webglLost: Ref<boolean> = ref(false)
 const currentBg: Ref<string> = ref(props.background)
+
+// ============================================
+// 热点标注（投影 HTML 层 + 逐帧遮挡检测）
+// ============================================
+interface HotspotScreen {
+  annotation: Annotation
+  x: number
+  y: number
+  visible: boolean
+}
+
+const showAnnotations: Ref<boolean> = ref(true)
+const activeAnnotationId: Ref<number | null> = ref(null)
+const hotspotScreens: Ref<HotspotScreen[]> = ref([])
+
+const visibleHotspots = computed<HotspotScreen[]>(() =>
+  showAnnotations.value ? hotspotScreens.value : [],
+)
+const hotspotsActive = computed<boolean>(() =>
+  props.annotations.length > 0 && !!props.modelPath && !loadError.value && !webglLost.value,
+)
+
+// 复用对象避免每帧分配
+const _spotVec = new THREE.Vector3()
+const _spotNdc = new THREE.Vector3()
+const _spotDir = new THREE.Vector3()
+const hotspotRaycaster = new THREE.Raycaster()
+
+/** 逐帧把热点投影为屏幕坐标并做遮挡检测（被模型挡住时淡出并禁点） */
+function updateHotspots(): void {
+  if (!hotspotsActive.value || !showAnnotations.value) return
+  if (!renderer || !camera || !currentModel) return
+
+  const width = renderer.domElement.clientWidth
+  const height = renderer.domElement.clientHeight
+  const camPos = camera.position
+
+  for (const spot of hotspotScreens.value) {
+    _spotVec.set(
+      spot.annotation.position_x,
+      spot.annotation.position_y,
+      spot.annotation.position_z,
+    )
+    const distance = _spotVec.distanceTo(camPos)
+
+    // 投影到视口外或相机背后时隐藏
+    _spotNdc.copy(_spotVec).project(camera)
+    if (_spotNdc.z > 1 || _spotNdc.x < -1.1 || _spotNdc.x > 1.1 || _spotNdc.y < -1.1 || _spotNdc.y > 1.1) {
+      spot.visible = false
+      continue
+    }
+
+    // 从相机向热点做射线检测，路径上被模型挡住则视为遮挡
+    _spotDir.copy(_spotVec).sub(camPos).normalize()
+    hotspotRaycaster.set(camPos, _spotDir)
+    hotspotRaycaster.far = Math.max(distance - 0.05, 0.01)
+    const hits = hotspotRaycaster.intersectObject(currentModel, true)
+    spot.visible = hits.length === 0
+
+    spot.x = (_spotNdc.x * 0.5 + 0.5) * width
+    spot.y = (-_spotNdc.y * 0.5 + 0.5) * height
+  }
+}
+
+function onHotspotClick(annotation: Annotation): void {
+  activeAnnotationId.value = annotation.id
+  emit('hotspot-click', annotation)
+}
+
+// 标注列表变化时重建屏幕点位（保留已激活状态）
+watch(
+  () => props.annotations,
+  (list) => {
+    hotspotScreens.value = list.map((annotation) => ({
+      annotation,
+      x: 0,
+      y: 0,
+      visible: false,
+    }))
+    if (activeAnnotationId.value && !list.some((a) => a.id === activeAnnotationId.value)) {
+      activeAnnotationId.value = null
+    }
+  },
+  { immediate: true, deep: false },
+)
 
 let renderer: THREE.WebGLRenderer | null = null
 let scene: THREE.Scene | null = null
@@ -261,11 +391,46 @@ function initScene(): void {
     webglLost.value = false
     retryLoad()
   }
+
+  // 放置模式：区分拖拽旋转与单击选点（位移小于阈值视为单击）
+  let pointerDownX = 0
+  let pointerDownY = 0
+  const onPointerDown = (e: PointerEvent): void => {
+    pointerDownX = e.clientX
+    pointerDownY = e.clientY
+    // 用户上手即暂停自动巡展，避免热点等目标持续漂移
+    if (controls && controls.autoRotate) {
+      controls.autoRotate = false
+    }
+  }
+  const onPointerUp = (e: PointerEvent): void => {
+    if (!props.placementMode) return
+    if (Math.hypot(e.clientX - pointerDownX, e.clientY - pointerDownY) > 6) return
+    if (!renderer || !camera || !currentModel) return
+
+    const rect = renderer.domElement.getBoundingClientRect()
+    const ndc = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1,
+    )
+    const ray = new THREE.Raycaster()
+    ray.setFromCamera(ndc, camera)
+    const hits = ray.intersectObject(currentModel, true)
+    if (hits.length > 0) {
+      const p = hits[0].point
+      emit('surface-click', { x: p.x, y: p.y, z: p.z })
+    }
+  }
+
   canvas.addEventListener('webglcontextlost', onContextLost)
   canvas.addEventListener('webglcontextrestored', onContextRestored)
+  canvas.addEventListener('pointerdown', onPointerDown)
+  canvas.addEventListener('pointerup', onPointerUp)
   canvas._webglCleanup = (): void => {
     canvas.removeEventListener('webglcontextlost', onContextLost)
     canvas.removeEventListener('webglcontextrestored', onContextRestored)
+    canvas.removeEventListener('pointerdown', onPointerDown)
+    canvas.removeEventListener('pointerup', onPointerUp)
   }
 
   // Resize handler
@@ -286,6 +451,7 @@ function initScene(): void {
   function animate(): void {
     animationId = requestAnimationFrame(animate)
     if (controls) controls.update()
+    updateHotspots()
     if (renderer && scene && camera) {
       renderer.render(scene, camera)
     }
@@ -421,6 +587,16 @@ watch(currentBg, (newBg: string) => {
   applyBackground(newBg)
 })
 
+// 放置模式下光标用十字，提示可点选
+watch(
+  () => props.placementMode,
+  (on) => {
+    if (renderer) {
+      renderer.domElement.style.cursor = on ? 'crosshair' : ''
+    }
+  },
+)
+
 function disposeScene(): void {
   // 取消模型加载
   if (modelCleanup) {
@@ -509,4 +685,48 @@ onMounted(async () => {
 onUnmounted(() => {
   disposeScene()
 })
+
+/** 截取当前 3D 视角为 PNG dataURL（先同步渲染一帧，无需 preserveDrawingBuffer） */
+function capture(): string | null {
+  if (!renderer || !scene || !camera) return null
+  renderer.render(scene, camera)
+  try {
+    return renderer.domElement.toDataURL('image/png')
+  } catch {
+    return null
+  }
+}
+
+defineExpose({ capture })
 </script>
+
+<style scoped>
+.hotspot-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(196, 58, 49, 0.92);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(196, 58, 49, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.25s ease;
+}
+.hotspot-dot:hover {
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow: 0 0 0 6px rgba(196, 58, 49, 0.3);
+}
+.hotspot-dot--active {
+  background: #8a6a2f;
+  box-shadow: 0 0 0 6px rgba(138, 106, 47, 0.32);
+}
+</style>
