@@ -48,6 +48,8 @@ func main() {
 	dailyPickStore := model.NewDailyPickStore(db)
 	submissionStore := model.NewSubmissionStore(db)
 	commentStore := model.NewCommentStore(db)
+	annotationStore := model.NewAnnotationStore(db)
+	quizStore := model.NewQuizStore(db)
 
 	// 插入种子数据
 	if *seed {
@@ -55,7 +57,7 @@ func main() {
 	}
 
 	// 设置路由
-	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, commentStore, cfg)
+	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, commentStore, annotationStore, quizStore, cfg)
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%s", cfg.Port)
@@ -425,5 +427,58 @@ func seedData(
 		log.Printf("[Seed] 每日推荐已设置: %s", garment.Name)
 	}
 
+	seedAnnotations(db)
 	log.Println("[Seed] 种子数据插入完成")
+}
+
+// seedAnnotations 为 3 件带模型的示例服饰插入演示热点标注
+// 坐标由 tools/seed_hotspots.js 对 GLB 表面射线求交得出（模型居中后、朝向初始镜头 +Z）
+func seedAnnotations(db *sql.DB) {
+	type demoPoint struct {
+		Garment string
+		Title   string
+		Content string
+		X, Y, Z float64
+	}
+	demos := []demoPoint{
+		{Garment: "苗族百褶裙", Title: "百褶工艺", X: 0, Y: 0.2332, Z: 0.1621,
+			Content: "百褶裙的裙褶多达数百道，象征苗族祖先迁徙途中翻越的山川，每一道褶皱都是一段迁徙的记忆。"},
+		{Garment: "苗族百褶裙", Title: "蜡染底纹", X: 0, Y: -0.0466, Z: 0.2285,
+			Content: "以铜刀蘸熔蜡绘于布面，经蓝靛浸染后脱蜡显花，几何纹代表星空与大地，蓝白相间清雅古朴。"},
+		{Garment: "苗族百褶裙", Title: "裙摆刺绣", X: 0, Y: -0.3731, Z: 0.2673,
+			Content: "花卉纹绣于裙摆之上，寓意生命繁衍，与蜡染底纹相映成趣，是蜡染与刺绣双重工艺的结晶。"},
+
+		{Garment: "苏绣旗袍", Title: "立领盘扣", X: 0, Y: 0.4137, Z: 0.063,
+			Content: "传统旗袍立领配手工盘扣，一扣一结皆为心思，勾勒出东方女性的端庄与含蓄。"},
+		{Garment: "苏绣旗袍", Title: "花鸟绣面", X: 0, Y: 0.0591, Z: 0.0698,
+			Content: "苏绣以「细、雅、洁」著称，花鸟纹样针法细腻、劈丝如发，色彩层次丰富，是中国四大名绣之首的代表。"},
+		{Garment: "苏绣旗袍", Title: "旗袍下摆", X: 0, Y: -0.3546, Z: 0.0551,
+			Content: "下摆与侧衩处以手工滚边收口，行走间开衩微露，尽显江南水乡的柔美线条。"},
+
+		{Garment: "藏族氆氇袍", Title: "氆氇织造", X: 0, Y: 0.3099, Z: 0.0301,
+			Content: "氆氇是藏族最具代表性的手工织品，以羊毛捻线织造，厚实保暖，适应高原多变的气候。"},
+		{Garment: "藏族氆氇袍", Title: "几何条纹", X: 0, Y: -0.0516, Z: 0.0563,
+			Content: "袍身织入规整的几何条纹，色彩沉稳对比鲜明，体现藏族人民对秩序与自然的审美表达。"},
+		{Garment: "藏族氆氇袍", Title: "下摆镶边", X: 0, Y: -0.3615, Z: 0.0519,
+			Content: "袍身宽大便于骑马劳作，下摆以同料镶边收束，整体庄重古朴，是高原生活智慧的缩影。"},
+	}
+
+	for i, d := range demos {
+		var garmentID int64
+		err := db.QueryRow(`SELECT id FROM garments WHERE name = ? LIMIT 1`, d.Garment).Scan(&garmentID)
+		if err != nil {
+			log.Printf("[Seed] 热点标注跳过 '%s': 服饰不存在", d.Garment)
+			continue
+		}
+		_, err = db.Exec(
+			`INSERT INTO annotations (garment_id, title, content, position_x, position_y, position_z, sort_order)
+			 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			garmentID, d.Title, d.Content, d.X, d.Y, d.Z, i%3,
+		)
+		if err != nil {
+			log.Printf("[Seed] 热点标注 '%s - %s' 插入失败: %v", d.Garment, d.Title, err)
+		} else {
+			log.Printf("[Seed] 热点标注 '%s - %s' 插入成功", d.Garment, d.Title)
+		}
+	}
 }

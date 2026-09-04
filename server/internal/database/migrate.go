@@ -168,6 +168,22 @@ func RunMigrations(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_comments_status ON comments(status)`,
 
+		// 服饰热点标注表（3D 模型上的纹样/工艺讲解点，坐标为展示场景世界坐标）
+		`CREATE TABLE IF NOT EXISTS annotations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			garment_id INTEGER NOT NULL,
+			title TEXT NOT NULL,
+			content TEXT NOT NULL DEFAULT '',
+			position_x REAL NOT NULL DEFAULT 0,
+			position_y REAL NOT NULL DEFAULT 0,
+			position_z REAL NOT NULL DEFAULT 0,
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (garment_id) REFERENCES garments(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_annotations_garment_id ON annotations(garment_id)`,
+
 		// 评论点赞表
 		`CREATE TABLE IF NOT EXISTS comment_likes (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -180,6 +196,20 @@ func RunMigrations(db *sql.DB) error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_comment_likes_comment_id ON comment_likes(comment_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_comment_likes_user_id ON comment_likes(user_id)`,
+
+		// 问答小游戏答题记录表
+		`CREATE TABLE IF NOT EXISTS quiz_records (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			score INTEGER NOT NULL DEFAULT 0,
+			total INTEGER NOT NULL DEFAULT 0,
+			correct_count INTEGER NOT NULL DEFAULT 0,
+			duration_seconds INTEGER NOT NULL DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_quiz_records_user_id ON quiz_records(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_quiz_records_score ON quiz_records(score)`,
 	}
 
 	for i, m := range migrations {

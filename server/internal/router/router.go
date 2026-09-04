@@ -21,6 +21,8 @@ func SetupRouter(
 	dailyPickStore *model.DailyPickStore,
 	submissionStore *model.SubmissionStore,
 	commentStore *model.CommentStore,
+	annotationStore *model.AnnotationStore,
+	quizStore *model.QuizStore,
 	cfg *config.Config,
 ) *gin.Engine {
 	if cfg.AppEnv == "production" {
@@ -41,6 +43,7 @@ func SetupRouter(
 	reportService := service.NewReportService(garmentStore)
 	modelService := service.NewModelService(modelStore, garmentStore, cfg.UploadDir, cfg.MaxUploadSize)
 	submissionService := service.NewSubmissionService(submissionStore, cfg.UploadDir, cfg.MaxImageUploadSize)
+	quizService := service.NewQuizService(quizStore)
 
 	// --- Handlers ---
 	authHandler := handler.NewAuthHandler(authService)
@@ -53,6 +56,8 @@ func SetupRouter(
 	dashboardHandler := handler.NewAdminDashboardHandler(garmentStore, modelStore, userStore, favoriteStore)
 	submissionHandler := handler.NewSubmissionHandler(submissionStore, submissionService, garmentStore, modelStore)
 	commentHandler := handler.NewCommentHandler(commentStore, garmentStore)
+	annotationHandler := handler.NewAnnotationHandler(annotationStore, garmentStore)
+	quizHandler := handler.NewQuizHandler(quizStore, quizService)
 
 	// --- Public Routes ---
 	api := r.Group("/api")
@@ -79,6 +84,7 @@ func SetupRouter(
 			garments.GET("", garmentHandler.List)
 			garments.GET("/:id", garmentHandler.GetByID)
 			garments.GET("/:id/recommend", garmentHandler.GetRecommendChain)
+			garments.GET("/:id/annotations", annotationHandler.ListByGarment)
 		}
 
 		// Daily
@@ -121,6 +127,15 @@ func SetupRouter(
 
 		// Comments — 评论列表（可选登录：登录后额外可见自己的待审核/已驳回评论）
 		api.GET("/comments", middleware.JWT(cfg.JWTSecret, false), commentHandler.List)
+
+		// Quiz — 华裳问答（出题与排行榜公开；提交判分可选登录：未登录判分但不记录成绩）
+		quiz := api.Group("/quiz")
+		{
+			quiz.GET("/questions", quizHandler.GetQuestions)
+			quiz.GET("/leaderboard", quizHandler.Leaderboard)
+			quiz.POST("/submit", middleware.JWT(cfg.JWTSecret, false), quizHandler.Submit)
+			quiz.POST("/check", quizHandler.Check)
+		}
 	}
 
 	// --- User Routes (JWT required) ---
@@ -144,6 +159,9 @@ func SetupRouter(
 			comments.POST("/:id/like", commentHandler.Like)
 			comments.DELETE("/:id/like", commentHandler.Unlike)
 		}
+
+		// Quiz — 个人战绩（需登录）
+		userRoutes.GET("/quiz/records", quizHandler.MyRecords)
 	}
 
 	// --- Admin Routes (JWT + admin role required) ---
@@ -186,6 +204,15 @@ func SetupRouter(
 			adminComments.PUT("/:id/approve", commentHandler.AdminApprove)
 			adminComments.PUT("/:id/reject", commentHandler.AdminReject)
 			adminComments.DELETE("/:id", commentHandler.AdminDelete)
+		}
+
+		// 热点标注管理
+		adminAnnotations := admin.Group("/annotations")
+		{
+			adminAnnotations.GET("", annotationHandler.AdminList)
+			adminAnnotations.POST("", annotationHandler.AdminCreate)
+			adminAnnotations.PUT("/:id", annotationHandler.AdminUpdate)
+			adminAnnotations.DELETE("/:id", annotationHandler.AdminDelete)
 		}
 	}
 
