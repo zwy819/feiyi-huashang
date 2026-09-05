@@ -35,14 +35,14 @@
           class="relative group"
         >
           <Card
-            :to="`/detail/${fav.garment?.id || fav.garment_id}`"
-            :title="fav.garment?.name || fav.name"
-            :subtitle="`${fav.garment?.dynasty || fav.dynasty || ''}代 · ${fav.garment?.ethnic || fav.ethnic || ''} · ${fav.garment?.craft || fav.craft || ''}`"
+            :to="`/detail/${fav.garment_id}`"
+            :title="fav.garment_name"
+            :subtitle="`${dynastyLabel(fav.garment_dynasty)} · ${fav.garment_ethnic || ''} · ${fav.garment_craft || ''}`"
           />
           <!-- 移除按钮 -->
           <button
-            @click.prevent.stop="handleRemove(fav.garment_id || fav.garment?.id)"
-            :disabled="removing === (fav.garment_id || fav.garment?.id)"
+            @click.prevent.stop="handleRemove(fav.garment_id)"
+            :disabled="removing === fav.garment_id"
             class="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 text-mogao-cinnabar
                    opacity-0 group-hover:opacity-100 transition-opacity
                    hover:bg-mogao-cinnabar hover:text-white disabled:opacity-50"
@@ -67,27 +67,15 @@ import Skeleton from '@/components/Common/Skeleton.vue'
 import type { FavoriteItem } from '@/types/favorite'
 import type { ApiResponse } from '@/types/api'
 
-interface FavoriteDisplay {
-  id?: number
-  garment_id?: number
-  garment?: {
-    id?: number
-    name?: string
-    dynasty?: string
-    ethnic?: string
-    craft?: string
-    province?: string
-  }
-  name?: string
-  dynasty?: string
-  ethnic?: string
-  craft?: string
-  province?: string
-}
-
-const favorites: Ref<FavoriteDisplay[]> = ref([])
+const favorites: Ref<FavoriteItem[]> = ref([])
 const loading: Ref<boolean> = ref(true)
 const removing: Ref<number | null> = ref(null)
+
+// "清"→"清代"；"现代/古代"这类已含"代"的原样保留
+function dynastyLabel(dynasty?: string): string {
+  if (!dynasty) return ''
+  return dynasty.endsWith('代') ? dynasty : `${dynasty}代`
+}
 
 async function fetchFavorites(): Promise<void> {
   loading.value = true
@@ -109,9 +97,7 @@ async function handleRemove(garmentId: number | undefined): Promise<void> {
   removing.value = garmentId
   try {
     await favoriteAPI.remove(garmentId)
-    favorites.value = favorites.value.filter(
-      (f) => Number(f.garment_id || f.garment?.id) !== Number(garmentId),
-    )
+    favorites.value = favorites.value.filter((f) => Number(f.garment_id) !== Number(garmentId))
   } catch {
     console.error('移除收藏失败')
   } finally {

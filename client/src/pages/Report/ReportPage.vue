@@ -36,9 +36,9 @@
               {{ i + 1 }}
             </span>
             <div class="flex-1">
-              <p class="font-medium text-mogao-lapis-700">{{ fav.garment?.name || fav.name }}</p>
+              <p class="font-medium text-mogao-lapis-700">{{ fav.garment_name }}</p>
               <p class="text-xs text-mogao-ochre-500">
-                {{ fav.garment?.dynasty || fav.dynasty }}代 · {{ fav.garment?.ethnic || fav.ethnic }} · {{ fav.garment?.craft || fav.craft }} · {{ fav.garment?.province || fav.province }}
+                {{ dynastyLabel(fav.garment_dynasty) }} · {{ fav.garment_ethnic || '' }} · {{ fav.garment_craft || '' }} · {{ fav.garment_province || '' }}
               </p>
             </div>
           </div>
@@ -82,36 +82,25 @@ import { reportAPI, favoriteAPI } from '@/services/api'
 import EmptyState from '@/components/Common/EmptyState.vue'
 import { formatDate } from '@/utils'
 import type { ApiResponse } from '@/types/api'
+import type { FavoriteItem } from '@/types/favorite'
 
-interface FavoriteItemDisplay {
-  id?: number
-  garment_id?: number
-  garment?: {
-    id?: number
-    name?: string
-    dynasty?: string
-    ethnic?: string
-    craft?: string
-    province?: string
-  }
-  name?: string
-  dynasty?: string
-  ethnic?: string
-  craft?: string
-  province?: string
-}
-
-const favorites: Ref<FavoriteItemDisplay[]> = ref([])
+const favorites: Ref<FavoriteItem[]> = ref([])
 const loading: Ref<boolean> = ref(true)
 const generating: Ref<boolean> = ref(false)
 const generated: Ref<boolean> = ref(false)
 
+// "清"→"清代"；"现代/古代"这类已含"代"的原样保留
+function dynastyLabel(dynasty?: string): string {
+  if (!dynasty) return ''
+  return dynasty.endsWith('代') ? dynasty : `${dynasty}代`
+}
+
 onMounted(async () => {
   try {
     const res = await favoriteAPI.list()
-    const data = res as ApiResponse<{ favorites: FavoriteItemDisplay[] }> | { favorites: FavoriteItemDisplay[] }
-    favorites.value = (data as ApiResponse<{ favorites: FavoriteItemDisplay[] }>).data?.favorites
-      || (data as { favorites: FavoriteItemDisplay[] }).favorites
+    const data = res as ApiResponse<{ favorites: FavoriteItem[] }> | { favorites: FavoriteItem[] }
+    favorites.value = (data as ApiResponse<{ favorites: FavoriteItem[] }>).data?.favorites
+      || (data as { favorites: FavoriteItem[] }).favorites
       || []
   } catch {
     favorites.value = []
@@ -124,7 +113,7 @@ async function handleGenerate(): Promise<void> {
   generating.value = true
   try {
     const response = (await reportAPI.generate({
-      ids: favorites.value.map((f) => f.garment_id || f.garment?.id).join(','),
+      ids: favorites.value.map((f) => f.garment_id).join(','),
     })) as unknown as Blob
 
     const blob = new Blob([response], { type: 'application/pdf' })
