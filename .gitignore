@@ -8,6 +8,8 @@ build/
 
 # Database
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 
@@ -22,6 +24,9 @@ build/
 *.swp
 *.swo
 *~
+
+# AI 助手计划目录
+.zcode/
 
 # OS
 .DS_Store
