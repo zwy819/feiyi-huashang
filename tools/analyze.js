@@ -15,20 +15,23 @@ import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 
 const MODELS_DIR = resolve('../client/public/models');
-const MODELS = [
-  '回族绣花盖头.glb',
-  '广东潮绣婚服.glb',
-  '朝鲜族短袄裙.glb',
-  '湖北土家族摆手舞衣.glb',
-  '满族旗袍.glb',
-  '福建惠安女服饰.glb',
-  '藏族安多袍.glb',
-  '裕固族红缨帽.glb',
-  '赫哲族鱼皮衣.glb',
-  '陕西肚兜.glb',
-  '高山族贝珠衣.glb',
-  '黎族筒裙.glb',
-];
+// 支持命令行指定文件名，缺省时分析默认清单
+const MODELS = process.argv.slice(2).length
+  ? process.argv.slice(2)
+  : [
+      '回族绣花盖头.glb',
+      '广东潮绣婚服.glb',
+      '朝鲜族短袄裙.glb',
+      '湖北土家族摆手舞衣.glb',
+      '满族旗袍.glb',
+      '福建惠安女服饰.glb',
+      '藏族安多袍.glb',
+      '裕固族红缨帽.glb',
+      '赫哲族鱼皮衣.glb',
+      '陕西肚兜.glb',
+      '高山族贝珠衣.glb',
+      '黎族筒裙.glb',
+    ];
 
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 
