@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"strings"
 
@@ -9,6 +10,13 @@ import (
 
 	"github.com/jung-kurt/gofpdf"
 )
+
+//go:embed fonts/simhei.ttf
+var simheiTTF []byte
+
+// reportFontFamily 支持中文的嵌入字体；gofpdf 内置 Helvetica 仅覆盖拉丁字符，
+// 中文会渲染为乱码，因此报告统一使用嵌入的黑体（B 样式复用同字节模拟粗体）。
+const reportFontFamily = "simhei"
 
 type ReportService struct {
 	garmentStore *model.GarmentStore
@@ -34,29 +42,37 @@ func (s *ReportService) GeneratePDF(ids []int64) ([]byte, error) {
 
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetAutoPageBreak(true, 20)
+	pdf.AddUTF8FontFromBytes(reportFontFamily, "", simheiTTF)
+	pdf.AddUTF8FontFromBytes(reportFontFamily, "B", simheiTTF)
 
 	// 封面
 	pdf.AddPage()
-	pdf.SetFont("Helvetica", "B", 24)
+	pdf.SetFont(reportFontFamily, "B", 24)
 	pdf.CellFormat(0, 15, "非遗华裳", "", 1, "C", false, 0, "")
-	pdf.SetFont("Helvetica", "", 14)
+	pdf.SetFont(reportFontFamily, "", 14)
 	pdf.CellFormat(0, 10, "中国非物质文化遗产服饰数字博物馆", "", 1, "C", false, 0, "")
 	pdf.Ln(10)
-	pdf.SetFont("Helvetica", "", 12)
+	pdf.SetFont(reportFontFamily, "", 12)
 	pdf.CellFormat(0, 8, fmt.Sprintf("共 %d 件服饰", len(garments)), "", 1, "C", false, 0, "")
 
 	for _, g := range garments {
 		pdf.AddPage()
 
 		// 服饰名称
-		pdf.SetFont("Helvetica", "B", 18)
+		pdf.SetFont(reportFontFamily, "B", 18)
 		pdf.CellFormat(0, 12, g.Name, "", 1, "L", false, 0, "")
 
-		pdf.SetFont("Helvetica", "", 11)
+		pdf.SetFont(reportFontFamily, "", 11)
 		pdf.Ln(4)
 
+		// "清"→"清代"，已是"现代/古代"这类以"代"结尾的则原样保留
+		dynasty := g.Dynasty
+		if dynasty != "" && !strings.HasSuffix(dynasty, "代") {
+			dynasty += "代"
+		}
+
 		info := [][2]string{
-			{"朝代", g.Dynasty + "代"},
+			{"朝代", dynasty},
 			{"民族", g.Ethnic},
 			{"工艺", g.Craft},
 			{"材质", g.Material},
@@ -65,12 +81,12 @@ func (s *ReportService) GeneratePDF(ids []int64) ([]byte, error) {
 		}
 
 		for _, item := range info {
-			if item[1] == "" || item[1] == "代" {
+			if item[1] == "" {
 				continue
 			}
-			pdf.SetFont("Helvetica", "B", 11)
+			pdf.SetFont(reportFontFamily, "B", 11)
 			pdf.CellFormat(30, 8, item[0]+":", "", 0, "L", false, 0, "")
-			pdf.SetFont("Helvetica", "", 11)
+			pdf.SetFont(reportFontFamily, "", 11)
 			pdf.CellFormat(0, 8, item[1], "", 1, "L", false, 0, "")
 		}
 
@@ -78,18 +94,18 @@ func (s *ReportService) GeneratePDF(ids []int64) ([]byte, error) {
 
 		// 文化寓意
 		if g.CulturalMeaning != "" {
-			pdf.SetFont("Helvetica", "B", 11)
+			pdf.SetFont(reportFontFamily, "B", 11)
 			pdf.CellFormat(0, 8, "文化寓意:", "", 1, "L", false, 0, "")
-			pdf.SetFont("Helvetica", "", 10)
+			pdf.SetFont(reportFontFamily, "", 10)
 			pdf.MultiCell(0, 6, g.CulturalMeaning, "", "L", false)
 			pdf.Ln(2)
 		}
 
 		// 描述
 		if g.Description != "" {
-			pdf.SetFont("Helvetica", "B", 11)
+			pdf.SetFont(reportFontFamily, "B", 11)
 			pdf.CellFormat(0, 8, "描述:", "", 1, "L", false, 0, "")
-			pdf.SetFont("Helvetica", "", 10)
+			pdf.SetFont(reportFontFamily, "", 10)
 			pdf.MultiCell(0, 6, g.Description, "", "L", false)
 		}
 	}
