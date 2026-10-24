@@ -199,6 +199,28 @@ pnpm run verify:ai
 - 知识库文章只做事实性摘要并链接原始发布方，不整段复制原文；原文版权归各发布方所有。
 - 字体、模型生成工具和第三方素材的授权需在提交前逐项核对，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
+## 常见问题
+
+### AI 状态显示“未配置”
+
+确认 `server/.env` 中 `AI_API_KEY` 非空，并重启后端。没有 Key 时普通浏览、统计、报告仍可用，只是 AI 入口会提示未配置。
+
+### 模型返回 401 Incorrect API key
+
+- **百炼（DashScope）Key**：通常以 `sk-` 开头，Base URL 用 `https://dashscope.aliyuncs.com/compatible-mode/v1`。
+- **QwenCloud Key**：以 `sk-ws-` 开头，必须使用创建 Key 的同一区域端点，例如新加坡：
+  `https://ap-southeast-1.maas.qwencloudapi.com/compatible-mode/v1`。
+- 不要把 Qwen Code 的 OAuth/登录令牌当成 API Key；请到控制台的 API Keys 页面重新创建。
+- 区域不匹配、Key 复制不完整或已删除都会返回 401。修改后执行 `go run ./cmd/api -ingest` 重建向量索引。
+
+### 3D 视口显示“暂无 3D 模型”
+
+模型资产未下载。执行 `scripts/fetch-models.ps1`，确认 `client/public/models/` 下有 41 个 GLB。
+
+### 首次启动很慢
+
+`go run` 需要编译 CGO/SQLite，首次可能 1–2 分钟；前端首次 `pnpm install` 也需要时间。之后启动会明显加快。
+
 ## 已知边界
 
 - 未配置真实模型 Key 时，AI 入口会显示“未配置”，普通浏览不受影响。
