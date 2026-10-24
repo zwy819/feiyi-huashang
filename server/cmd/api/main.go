@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
+	"nonlegacy-garment-3d/server/internal/ai"
 	"nonlegacy-garment-3d/server/internal/config"
 	"nonlegacy-garment-3d/server/internal/database"
 	"nonlegacy-garment-3d/server/internal/model"
@@ -18,6 +21,7 @@ import (
 
 func main() {
 	seed := flag.Bool("seed", false, "插入种子数据")
+	ingest := flag.Bool("ingest", false, "强制重建 AI 知识库")
 	flag.Parse()
 
 	// 加载配置
@@ -56,8 +60,16 @@ func main() {
 		seedData(db, userStore, garmentStore, modelStore, dailyPickStore, cfg)
 	}
 
+	// 初始化 AI 导览（知识库为空或 -ingest 时重建索引）
+	aiService := ai.NewService(cfg, db, garmentStore, annotationStore, "knowledge/articles")
+	initCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	if err := aiService.Init(initCtx, *ingest); err != nil {
+		log.Printf("[AI] 初始化失败，普通浏览仍可用: %v", err)
+	}
+	cancel()
+
 	// 设置路由
-	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, commentStore, annotationStore, quizStore, cfg)
+	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, commentStore, annotationStore, quizStore, aiService, cfg)
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%s", cfg.Port)

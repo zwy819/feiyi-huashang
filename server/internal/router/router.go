@@ -3,6 +3,7 @@ package router
 import (
 	"database/sql"
 
+	"nonlegacy-garment-3d/server/internal/ai"
 	"nonlegacy-garment-3d/server/internal/config"
 	"nonlegacy-garment-3d/server/internal/handler"
 	"nonlegacy-garment-3d/server/internal/middleware"
@@ -23,6 +24,7 @@ func SetupRouter(
 	commentStore *model.CommentStore,
 	annotationStore *model.AnnotationStore,
 	quizStore *model.QuizStore,
+	aiService *ai.Service,
 	cfg *config.Config,
 ) *gin.Engine {
 	if cfg.AppEnv == "production" {
@@ -58,6 +60,7 @@ func SetupRouter(
 	commentHandler := handler.NewCommentHandler(commentStore, garmentStore)
 	annotationHandler := handler.NewAnnotationHandler(annotationStore, garmentStore)
 	quizHandler := handler.NewQuizHandler(quizStore, quizService)
+	aiHandler := handler.NewAIHandler(aiService)
 
 	// --- Public Routes ---
 	api := r.Group("/api")
@@ -137,6 +140,14 @@ func SetupRouter(
 			quiz.POST("/submit", middleware.JWT(cfg.JWTSecret, false), quizHandler.Submit)
 			quiz.POST("/check", quizHandler.Check)
 		}
+
+		// AI docent — anonymous, rate-limited in the AI service.
+		aiGroup := api.Group("/ai")
+		{
+			aiGroup.GET("/status", aiHandler.Status)
+			aiGroup.POST("/chat", aiHandler.Chat)
+			aiGroup.POST("/feedback", aiHandler.Feedback)
+		}
 	}
 
 	// --- User Routes (JWT required) ---
@@ -148,7 +159,7 @@ func SetupRouter(
 			submissions.POST("", submissionHandler.Submit)
 			submissions.GET("", submissionHandler.ListMy)
 			submissions.GET("/:id", submissionHandler.GetMy)
-				submissions.PUT("/:id/retract", submissionHandler.Retract)
+			submissions.PUT("/:id/retract", submissionHandler.Retract)
 		}
 
 		// Comments — 评论写操作（发表 / 编辑 / 删除 / 点赞）
@@ -215,6 +226,9 @@ func SetupRouter(
 			adminAnnotations.PUT("/:id", annotationHandler.AdminUpdate)
 			adminAnnotations.DELETE("/:id", annotationHandler.AdminDelete)
 		}
+
+		// AI 知识库重建（管理员）
+		admin.POST("/ai/reindex", aiHandler.Reindex)
 	}
 
 	return r
