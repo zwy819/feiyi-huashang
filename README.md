@@ -24,7 +24,20 @@
 
 ## 快速开始
 
-### 环境要求
+### 一键启动（Windows）
+
+安装 Go、Node.js、pnpm 后，双击仓库根目录的 `start.bat`。脚本会自动：
+
+1. 从 `.env.example` 创建 `server/.env`（如果不存在）；
+2. 启动 Go 后端，空数据库时自动 `-seed`；
+3. 安装前端依赖（首次）并启动 Vite；
+4. 等待健康检查通过后打开 `http://localhost:5173/`。
+
+模型资产不会自动下载；需要 3D 展示时先执行 `scripts/fetch-models.ps1`。
+
+### 手动启动
+
+#### 环境要求
 
 - Go 1.22+
 - Node.js 18+
