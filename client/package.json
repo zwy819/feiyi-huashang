@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "verify:ai": "node scripts/verify-ai.mjs",
+    "eval:ai": "node scripts/eval-ai.mjs",
     "lint": "eslint . --ext js,vue --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
