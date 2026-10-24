@@ -66,6 +66,21 @@ try {
   }
   await page.screenshot({ path: path.join(outDir, 'ai-3d-highlight.png') })
 
+  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true })
+  await mobile.goto(base + '/', { waitUntil: 'networkidle' })
+  await mobile.getByRole('button', { name: '打开织语 AI 导览' }).click()
+  const mobileDialog = mobile.getByRole('dialog', { name: '织语 AI 导览' })
+  await mobileDialog.waitFor({ state: 'visible' })
+  const box = await mobileDialog.boundingBox()
+  await mobile.screenshot({ path: path.join(outDir, 'ai-panel-mobile.png') })
+  result.mobile = {
+    viewport: '390x844',
+    panelWidth: box?.width,
+    panelHeight: box?.height,
+    fullScreen: box ? box.width >= 389 && box.height >= 843 : false,
+  }
+  await mobile.close()
+
   console.log(JSON.stringify({ ok: true, result }, null, 2))
 } catch (error) {
   try {
