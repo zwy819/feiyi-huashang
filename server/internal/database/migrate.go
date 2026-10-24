@@ -210,6 +210,67 @@ func RunMigrations(db *sql.DB) error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_quiz_records_user_id ON quiz_records(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_quiz_records_score ON quiz_records(score)`,
+
+		// ===== AI 导览：知识库、检索块、用量与反馈 =====
+		// 语料包含馆藏结构化记录、3D 热点讲解和带来源的工艺/民族短文。
+		`CREATE TABLE IF NOT EXISTS knowledge_documents (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			doc_key TEXT UNIQUE NOT NULL,
+			title TEXT NOT NULL,
+			source_type TEXT NOT NULL DEFAULT 'article',
+			source_url TEXT DEFAULT '',
+			publisher TEXT DEFAULT '',
+			license TEXT DEFAULT '',
+			content TEXT NOT NULL DEFAULT '',
+			checksum TEXT NOT NULL DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','archived')),
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_knowledge_documents_type ON knowledge_documents(source_type)`,
+		`CREATE INDEX IF NOT EXISTS idx_knowledge_documents_status ON knowledge_documents(status)`,
+
+		`CREATE TABLE IF NOT EXISTS knowledge_chunks (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			document_id INTEGER NOT NULL,
+			chunk_index INTEGER NOT NULL,
+			content TEXT NOT NULL,
+			token_count INTEGER NOT NULL DEFAULT 0,
+			embedding TEXT DEFAULT '',
+			embedding_model TEXT DEFAULT '',
+			metadata_json TEXT DEFAULT '{}',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(document_id, chunk_index),
+			FOREIGN KEY (document_id) REFERENCES knowledge_documents(id) ON DELETE CASCADE
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_document_id ON knowledge_chunks(document_id)`,
+
+		`CREATE TABLE IF NOT EXISTS ai_usage (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			session_hash TEXT NOT NULL DEFAULT '',
+			endpoint TEXT NOT NULL DEFAULT 'chat',
+			model TEXT NOT NULL DEFAULT '',
+			prompt_tokens INTEGER NOT NULL DEFAULT 0,
+			completion_tokens INTEGER NOT NULL DEFAULT 0,
+			latency_ms INTEGER NOT NULL DEFAULT 0,
+			tool_calls INTEGER NOT NULL DEFAULT 0,
+			status TEXT NOT NULL DEFAULT 'ok',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_ai_usage_created_at ON ai_usage(created_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_ai_usage_session_hash ON ai_usage(session_hash)`,
+
+		`CREATE TABLE IF NOT EXISTS ai_feedback (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			message_id TEXT NOT NULL,
+			rating INTEGER NOT NULL CHECK(rating IN (-1,1)),
+			reason TEXT DEFAULT '',
+			model TEXT DEFAULT '',
+			retrieval_version TEXT DEFAULT '',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_ai_feedback_message_id ON ai_feedback(message_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_ai_feedback_created_at ON ai_feedback(created_at)`,
 	}
 
 	for i, m := range migrations {
