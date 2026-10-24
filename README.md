@@ -207,6 +207,26 @@ pnpm eval:ai -- --limit 10
 
 报告会检查来源命中、引用编号、拒答与注入禁词，输出通过率和逐题详情。评测集在 `server/knowledge/eval/questions.json`。
 
+### 无 Key 的完整链路测试（仅开发）
+
+仓库提供一个 **假 OpenAI 服务**，用于验证 Go 摄取、向量、SSE、引用和前端，不是真模型，不能用于演示：
+
+```bash
+# 终端 A
+python scripts/fake-openai-server.py --port 18080
+
+# 终端 B（使用测试数据库，避免污染正式库）
+cd server
+$env:PORT='3004'
+$env:DB_PATH='./data/ai-test.db'
+$env:AI_BASE_URL='http://localhost:18080/v1'
+$env:AI_API_KEY='test'
+$env:AI_MOCK_MODE='false'
+go run ./cmd/api -ingest
+```
+
+然后设置 `APP_URL=http://localhost:3004` 运行 `pnpm eval:ai` 或 `pnpm verify:ai`。
+
 ## 资产与许可
 
 - 代码以 MIT 许可发布，详见 [LICENSE](LICENSE)。
