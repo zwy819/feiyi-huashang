@@ -243,6 +243,7 @@ go run ./cmd/api -ingest
 ### 模型返回 401 Incorrect API key
 
 - **百炼（DashScope）Key**：通常以 `sk-` 开头，Base URL 用 `https://dashscope.aliyuncs.com/compatible-mode/v1`。
+- **百炼工作空间专用地址**：控制台可能给出 `https://ws-xxxx.cn-beijing.maas.aliyuncs.com/compatible-mode/v1` 这类带工作空间 ID 的地址。必须原样使用控制台给出的 Base URL，不能只替换通用地址，否则会返回 401。
 - **QwenCloud Key**：以 `sk-ws-` 开头，必须使用创建 Key 的同一区域端点，例如新加坡：
   `https://ap-southeast-1.maas.qwencloudapi.com/compatible-mode/v1`。
 - 不要把 Qwen Code 的 OAuth/登录令牌当成 API Key；请到控制台的 API Keys 页面重新创建。
