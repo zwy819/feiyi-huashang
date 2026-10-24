@@ -50,3 +50,6 @@ server/reports/
 
 # 后端模型上传目录
 server/data/models/
+
+# 浏览器验收截图
+client/test-results/

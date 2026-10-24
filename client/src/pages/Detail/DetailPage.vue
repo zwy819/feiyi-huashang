@@ -155,7 +155,9 @@
           class="card-mogao p-4 block hover:shadow-mogao-lg transition-shadow"
         >
           <h4 class="font-serif font-semibold text-mogao-lapis-700">{{ rec.name }}</h4>
-          <p class="text-xs text-mogao-ochre-500 mt-1">{{ rec.similarity }}</p>
+          <p class="text-xs text-mogao-ochre-500 mt-1">
+            {{ rec.similarity >= 2 ? '民族与工艺双重匹配' : '部分标签匹配' }}
+          </p>
         </router-link>
       </div>
     </div>

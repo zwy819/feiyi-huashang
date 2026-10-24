@@ -98,7 +98,9 @@ async function ask(text: string): Promise<void> {
   isOpen.value = true
 
   controller = new AbortController()
-  const current = assistant
+  // Read the item back through the reactive array; mutating the raw object
+  // passed to push() would not trigger Vue updates.
+  const current = messages.value[messages.value.length - 1]
 
   try {
     await aiAPI.streamChat(
