@@ -19,6 +19,7 @@
 - [9. 健康检查](#9-健康检查)
 - [10. 鉴权说明](#10-鉴权说明)
 - [11. 数据库结构](#11-数据库结构)
+- [12. AI 导览模块](#12-ai-导览模块)
 
 ---
 
@@ -1404,3 +1405,113 @@ POST /api/quiz/submit
 | 200 | 朝鲜族短袄裙 | 现代 | 朝鲜族 | 刺绣 | 吉林 | ✅ 朝鲜族短袄裙.glb |
 | 201 | 满族旗袍 | 清 | 满族 | 刺绣+镶滚 | 辽宁 | ✅ 满族旗袍.glb |
 | 202 | 高山族贝珠衣 | 清 | 高山族 | 贝珠编织 | 台湾 | ✅ 高山族贝珠衣.glb |
+
+---
+
+## 12. AI 导览模块
+
+AI 接口默认匿名可用，服务端按 IP 限流并受全站日 Token 预算约束。API Key 只从 `server/.env` 或进程环境变量读取，不会通过接口返回。
+
+### 12.1 AI 状态
+
+```http
+GET /api/ai/status
+```
+
+```json
+{
+  "code": 0,
+  "message": null,
+  "data": {
+    "enabled": true,
+    "configured": true,
+    "mock_mode": false,
+    "model": "qwen-plus",
+    "embedding_model": "text-embedding-v3",
+    "chunks": 185,
+    "message": "已连接 qwen-plus"
+  }
+}
+```
+
+| 字段 | 说明 |
+|---|---|
+| `enabled` | 服务端是否开启 AI |
+| `configured` | 是否有可用模型（真实 Key 或演示模式） |
+| `mock_mode` | 是否使用内置假模型 |
+| `chunks` | 当前知识块数量 |
+| `message` | 面向用户的短状态文案 |
+
+### 12.2 流式导览
+
+```http
+POST /api/ai/chat
+Content-Type: application/json
+Accept: text/event-stream
+```
+
+```json
+{
+  "message": "苗族百褶裙的裙褶为什么要压这么多道？",
+  "history": [
+    { "role": "user", "content": "我想了解苗族服饰" },
+    { "role": "assistant", "content": "可以先从百褶裙看起……" }
+  ],
+  "context": {
+    "page": "detail",
+    "garment_id": 163,
+    "annotation_id": 1
+  }
+}
+```
+
+- `message`：1–500 字。
+- `history`：客户端持有的最近对话，服务端会截断到配置上限。
+- `context`：可选页面上下文；`garment_id` / `annotation_id` 会先在数据库中校验。
+- 响应为 `text/event-stream`，事件如下：
+
+| 事件 | 数据 | 说明 |
+|---|---|---|
+| `meta` | `conversation_id`、`message_id`、`model`、`mock_mode` | 建立消息状态 |
+| `tool` | `name`、`status`、`summary`、`elapsed_ms` | 馆藏工具调用轨迹 |
+| `sources` | `Source[]` | 本轮可引用的来源，编号 `S1`…`S8` |
+| `delta` | `{ "text": "..." }` | 增量正文 |
+| `action` | `type`、`garment_id`、`annotation_id`、`label` | 服务端校验后的 3D 动作 |
+| `done` | `content`、`usage`、`latency_ms`、`sources_used` | 最终文本（已清理非法引用） |
+| `error` | `code`、`message`、`retryable` | 统一错误 |
+
+`done.content` 是服务端清理后的权威文本；前端可用它替换流式过程中的临时文本。
+
+### 12.3 反馈
+
+```http
+POST /api/ai/feedback
+Content-Type: application/json
+
+{
+  "message_id": "msg_xxx",
+  "rating": 1,
+  "reason": "解释清楚，来源可点"
+}
+```
+
+`rating` 只接受 `1`（有帮助）或 `-1`（没帮助）。
+
+### 12.4 重建知识库（管理员）
+
+```http
+POST /api/admin/ai/reindex
+Authorization: Bearer <admin-token>
+```
+
+返回 `{ documents, chunks, embedded, skipped }`。重建会重新读取 `server/knowledge/articles/*.md`、40 条馆藏记录和 119 条 3D 热点。
+
+### 12.5 AI 业务码
+
+| code | HTTP | 含义 |
+|---|---|---|
+| `42901` | 200/429 | 提问频率超限 |
+| `42902` | 200/429 | 全站日 Token 预算用尽 |
+| `50201` | 200/502 | 上游模型失败或超时 |
+| `50301` | 503 | AI 未配置（无 Key 且未开启演示模式） |
+| `50401` | 200/504 | 上游模型超时 |

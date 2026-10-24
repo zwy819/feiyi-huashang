@@ -442,6 +442,9 @@ func (s *Service) chat(ctx context.Context, req ChatRequest, message, conversati
 			return emit("delta", map[string]string{"text": delta})
 		})
 		if err != nil {
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				return &ChatError{Code: 50401, Message: "AI 模型响应超时，请重试", Retryable: true}
+			}
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}

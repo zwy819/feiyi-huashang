@@ -1,210 +1,188 @@
-# 非遗华裳 — 中国非物质文化遗产服饰 3D 数字博物馆
+# 非遗华裳 · 中国传统服饰 3D 数字博物馆
 
 以数字技术重现千年织造智慧，探索中国非物质文化遗产服饰的纹样之美、工艺之精、文化之魂。
+
+项目包含一个可浏览的 3D 数字博物馆，以及一位会讲解、能指认、可溯源的 AI 导览员「织语」。AI 回答基于馆藏档案、3D 热点讲解和 26 篇带来源的工艺/民族资料，关键结论以 `[S1]` 形式标注来源；当资料不足时会明确拒答，而不是自由发挥。
+
+## 项目亮点
+
+- **40 件非遗服饰**：覆盖 26 个民族、22 个省级地区、36 门工艺、5 个朝代。
+- **3D 数字展厅**：41 个 GLB 模型、119 个可点击热点，支持旋转、缩放、背景切换和分享图。
+- **AI 导览 Agent**：混合检索（字符二元组 BM25 + Embedding + RRF）、馆藏工具调用、SSE 流式回答、引用校验、3D 热点指认。
+- **可信与可恢复**：无 Key、限流、超时、空检索、SSE 中断均有独立状态；API Key 只保存在服务端。
+- **可评测**：Go 单元测试、前端类型检查、Playwright 浏览器验收脚本。
 
 ## 技术栈
 
 | 层 | 技术 |
 |---|---|
-| **前端** | Vue 3 + Vue Router 4 + Vite + TypeScript |
-| **3D 渲染** | Three.js（原生 GLTF/GLB 加载） |
-| **样式** | TailwindCSS 3（敦煌莫高窟色系） |
-| **图表** | ECharts 5 |
-| **后端** | Go + Gin |
-| **数据库** | SQLite |
-| **认证** | JWT（golang-jwt + bcrypt） |
-| **报告** | gofpdf（PDF 生成） |
-
-## 项目结构
-
-```
-nonlegacy-garment-3d/
-├── client/                          # 前端 Vue SPA（使用 pnpm）
-│   ├── public/
-│   │   └── models/                  # 3D 模型源文件 (.glb)
-│   ├── src/
-│   │   ├── main.ts                  # 应用入口
-│   │   ├── App.vue                  # 根组件
-│   │   ├── router/index.ts          # 路由配置（含 admin 路由）
-│   │   ├── components/
-│   │   │   ├── Layout/              # Layout / Navbar / Footer
-│   │   │   ├── Common/              # Card / Modal / Skeleton / EmptyState / Toast
-│   │   │   └── 3D/                  # ModelViewer / ModelLoader
-│   │   ├── pages/
-│   │   │   ├── Home/                # 首页
-│   │   │   ├── Explore/             # 服饰浏览
-│   │   │   ├── Detail/              # 服饰详情 + 3D
-│   │   │   ├── Favorites/           # 收藏夹
-│   │   │   ├── Statistics/          # 地理分布统计
-│   │   │   ├── Report/              # PDF 报告
-│   │   │   ├── Auth/                # 登录/注册
-│   │   │   └── Admin/               # 后台管理面板
-│   │   ├── composables/index.ts     # useFetch / useAuth / useDebounce / useToast
-│   │   ├── services/api.ts          # Axios API 封装
-│   │   ├── utils/index.ts           # 工具函数 + 常量
-│   │   ├── types/                   # TypeScript 类型定义
-│   │   └── styles/index.css         # 全局样式
-│   ├── index.html
-│   ├── vite.config.ts
-│   └── package.json
-├── server/                          # Go + Gin 后端
-│   ├── cmd/api/main.go              # 入口 + 种子数据
-│   ├── internal/
-│   │   ├── config/                  # 环境变量配置
-│   │   ├── database/                # SQLite 连接 + 迁移
-│   │   ├── model/                   # 数据模型 + 数据访问
-│   │   ├── handler/                 # HTTP 处理层
-│   │   ├── middleware/              # CORS / JWT / Admin / Recovery
-│   │   ├── service/                 # 业务逻辑层
-│   │   └── router/                  # 路由注册
-│   ├── data/
-│   │   ├── nonlegacy.db             # SQLite 数据库
-│   │   └── models/                  # 上传的 3D 模型文件
-│   ├── reports/                     # 生成的 PDF 报告
-│   ├── .env / .env.example
-│   └── go.mod
-├── docs/                            # 项目文档
-│   ├── API.md                       # API 接口文档
-│   └── PROJECT.md                   # 项目说明
-├── clothes/                         # 3D 模型源文件
-└── README.md
-```
-
-## 核心功能模块
-
-| 模块 | 路由 | 功能描述 |
-|---|---|---|
-| **首页** | `/` | Hero 展示 + 每日一服 3D 预览 + 模块入口 |
-| **服饰浏览** | `/explore` | 按朝代/民族/工艺筛选，关键词搜索，分页展示 |
-| **服饰详情** | `/detail/:id` | 服饰详情 + 3D 模型预览 + 智能推荐链 + 收藏 |
-| **收藏夹** | `/favorites` | 收藏/取消收藏管理（需登录） |
-| **地理分布** | `/statistics` | 全国非遗服饰地理分布气泡图 + 工艺饼图 + 概览 |
-| **导出报告** | `/report` | 基于收藏列表生成 PDF 报告下载（需登录） |
-| **登录/注册** | `/login` | 用户注册与登录 |
-| **后台管理** | `/admin` | 仪表盘 / 模型管理 / 服饰管理（需管理员） |
+| 前端 | Vue 3 + TypeScript + Vue Router + Vite + TailwindCSS |
+| 3D | Three.js（GLTF/GLB，原生渲染） |
+| 图表 | ECharts 5 |
+| 后端 | Go 1.22+ / Gin / SQLite / JWT / bcrypt / gofpdf |
+| AI | OpenAI 兼容接口，默认阿里云百炼 Qwen；进程内 RAG，无外部向量库 |
 
 ## 快速开始
 
 ### 环境要求
 
-- Go >= 1.21
-- Node.js >= 18
-- pnpm >= 8
+- Go 1.22+
+- Node.js 18+
+- pnpm 8+
+- Windows 下编译 `mattn/go-sqlite3` 需要 CGO 与 GCC（MinGW-w64）
 
 ### 1. 启动后端
 
 ```bash
 cd server
-
-# 复制环境变量配置
 cp .env.example .env
-
-# 安装 Go 依赖
-go mod tidy
-
-# 插入种子数据并启动服务器（端口 3001）
+# 编辑 .env，至少确认 PORT / JWT_SECRET；需要 AI 时填写 AI_API_KEY
+go mod download
 go run ./cmd/api -seed
 ```
 
-种子数据包含：
-- 管理员账号：`admin` / `admin123`
+首次运行会建表、插入 40 件馆藏与示例账号，并自动建立 AI 知识库索引。默认端口 `3001`。
+
+- 管理员：`admin` / `admin123`
 - 普通用户：`user` / `user123`
-- 5 件非遗服饰（苗族百褶裙、苏绣旗袍、藏族氆氇袍、蒙古族长袍、傣族筒裙）
 
 ### 2. 启动前端
 
 ```bash
 cd client
-
-# 安装依赖（必须使用 pnpm）
 pnpm install
-
-# 启动开发服务器（端口 5173）
 pnpm run dev
 ```
 
-### 3. 访问
+打开 `http://localhost:5173/`。Vite 会把 `/api` 代理到 `http://localhost:3001`。
 
-浏览器打开 `http://localhost:5173`
+### 3. 配置 AI
 
-## API 接口概览
+在 `server/.env` 中填写（该文件已被 `.gitignore` 忽略）：
 
-所有接口响应格式：`{ "code": 0, "message": null, "data": {} }`
+```dotenv
+AI_ENABLED=true
+AI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+AI_API_KEY=你的Key
+AI_CHAT_MODEL=qwen-plus
+AI_EMBEDDING_MODEL=text-embedding-v3
+AI_MOCK_MODE=false
+```
 
-### 公开接口
+没有 Key 时可以设置 `AI_MOCK_MODE=true`，用内置假模型验证前后端链路；评审演示应使用真实模型。
+
+重建知识库（修改资料后）：
+
+```bash
+go run ./cmd/api -ingest
+# 或管理员调用 POST /api/admin/ai/reindex
+```
+
+## AI 导览工作流
+
+```text
+用户问题 + 页面上下文 + 最近历史
+        │
+        ▼
+服务端校验 / 限流 / 日预算
+        │
+        ├─ 结构化过滤（民族/省份/工艺/朝代）
+        ├─ 馆藏工具（检索、详情、热点、相似、统计）
+        └─ 混合检索（BM25 + 向量 + RRF）
+        │
+        ▼
+证据编号 [S1]…[S8] → 提示词 → 模型流式生成
+        │
+        ▼
+引用校验 → 3D 动作校验 → SSE 事件
+```
+
+SSE 事件：`meta`、`tool`、`sources`、`delta`、`action`、`done`、`error`。前端用 `fetch` + `ReadableStream` 解析，不依赖 `EventSource`。
+
+安全设计：
+
+- Key 只读服务端环境变量，不进入前端构建产物。
+- 匿名限流（默认 10 次/分钟/IP）与全站日 Token 预算。
+- 只记录会话哈希、模型、Token、延迟、工具数量，不记录完整对话。
+- 引用编号必须能在本轮来源中找到，否则服务端删除；3D 热点 ID 必须真实存在且属于对应服饰。
+- 检索资料只作为资料处理，提示词明确抵抗资料中的注入指令。
+
+## API 一览
+
+所有 JSON 接口沿用 `{ "code": 0, "message": null, "data": {} }` 结构。
 
 | 方法 | 路径 | 说明 |
-|------|------|------|
-| `POST` | `/api/auth/register` | 用户注册 |
-| `POST` | `/api/auth/login` | 用户登录 |
-| `GET` | `/api/auth/profile` | 获取用户信息（JWT） |
+|---|---|---|
+| `GET` | `/api/health` | 健康检查 |
 | `GET` | `/api/garments` | 服饰列表（分页/筛选/搜索） |
 | `GET` | `/api/garments/:id` | 服饰详情 |
-| `GET` | `/api/garments/:id/recommend` | 智能推荐链 |
-| `GET` | `/api/daily` | 每日一服 |
-| `GET` | `/api/favorites` | 收藏列表（JWT） |
-| `POST` | `/api/favorites` | 添加收藏（JWT） |
-| `DELETE` | `/api/favorites/:garment_id` | 移除收藏（JWT） |
-| `GET` | `/api/favorites/check/:garment_id` | 检查收藏状态（JWT） |
-| `GET` | `/api/statistics/geo` | 地理分布数据 |
-| `GET` | `/api/statistics/craft-flow` | 工艺流向数据 |
-| `GET` | `/api/statistics/overview` | 概览统计 |
-| `GET` | `/api/report/generate?ids=1,2,3` | 生成 PDF 报告 |
-| `GET` | `/api/models` | 公开模型列表（分页） |
-| `GET` | `/api/models/:id/file` | 下载模型文件（供 3D 渲染） |
+| `GET` | `/api/garments/:id/annotations` | 3D 热点标注 |
+| `GET` | `/api/statistics/overview` | 馆藏概览 |
+| `GET` | `/api/statistics/geo` | 地理分布 |
+| `POST` | `/api/report/generate` | 生成 PDF 收藏报告 |
+| `GET` | `/api/ai/status` | AI 配置与知识库状态 |
+| `POST` | `/api/ai/chat` | SSE 流式导览 |
+| `POST` | `/api/ai/feedback` | 回答点赞/点踩 |
+| `POST` | `/api/admin/ai/reindex` | 管理员重建知识库 |
 
-### 管理接口（需要 JWT + admin 角色）
+完整接口见 [docs/API.md](docs/API.md)。
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| `GET` | `/api/admin/dashboard` | 仪表盘统计 |
-| `GET` | `/api/admin/models` | 模型列表 |
-| `GET` | `/api/admin/models/:id` | 模型详情 |
-| `POST` | `/api/admin/models` | 上传模型文件 |
-| `PUT` | `/api/admin/models/:id` | 更新模型信息 |
-| `DELETE` | `/api/admin/models/:id` | 删除模型 |
-| `POST` | `/api/admin/garments` | 创建服饰 |
-| `PUT` | `/api/admin/garments/:id` | 更新服饰 |
-| `DELETE` | `/api/admin/garments/:id` | 删除服饰 |
+## 目录结构
 
-详细接口文档见 [docs/API.md](docs/API.md)。
+```text
+nonlegacy-garment-3d/
+├── client/                 Vue 3 前端
+│   ├── src/components/AI/  AI 面板、消息、来源抽屉、工具轨迹
+│   ├── src/composables/    useAiChat 会话状态
+│   ├── src/services/ai.ts  SSE 解析
+│   └── scripts/            Playwright 验收脚本
+├── server/                 Go 后端
+│   ├── cmd/api/            入口、种子数据、AI 初始化
+│   ├── internal/ai/        知识摄取、BM25、检索、工具、Provider、SSE
+│   ├── internal/handler/   HTTP 处理
+│   ├── knowledge/articles/ 26 篇带来源资料
+│   └── data/nonlegacy.db   本地 SQLite（不提交）
+├── docs/                   计划、API、资产说明
+└── tools/                  标注与开发辅助脚本
+```
 
-## 后台管理面板
+## 测试与验收
 
-管理员登录后可通过导航栏「管理」入口进入后台面板（`/admin`），功能包括：
+```bash
+# 后端
+cd server
+go test ./...
+go build ./cmd/api
 
-- **仪表盘**：服饰/模型/用户/收藏统计概览
-- **模型管理**：上传 GLB/GLTF 文件，关联服饰，删除模型
-- **服饰管理**：创建/编辑/删除服饰信息，关联 3D 模型
+# 前端
+cd client
+pnpm run typecheck
+pnpm run build
 
-管理员账号：`admin` / `admin123`
+# 浏览器验收（需要本地后端与 Vite 已启动）
+pnpm run verify:ai
+```
 
-## 配色方案
+验收脚本会检查：
 
-采用**敦煌莫高窟色系**：
+1. 首页 AI 面板能打开并返回带引用的回答；
+2. 来源抽屉能展示来源，且 3D 可定位来源有标记；
+3. 详情页点击「在 3D 中查看」后，对应热点被激活并显示讲解卡。
 
-| 色名 | 色值 | 用途 |
-|------|------|------|
-| 朱砂红 | `#C43A31` | 标题、按钮主色、强调 |
-| 石绿 | `#2E7D5A` | 辅助点缀、成功状态 |
-| 土黄 | `#C89B5E` | 背景、边框、次按钮 |
-| 青金石蓝 | `#2E4A7A` | 正文、深色背景 |
-| 铅白 | `#F5F0E8` | 页面底色 |
-| 金色 | `#B8862D` | 高亮强调、分隔线 |
+## 资产与许可
 
-## 环境变量
+- 代码以 MIT 许可发布，详见 [LICENSE](LICENSE)。
+- 3D 模型约 230 MB，未纳入 Git；复现 3D 展示时需将 GLB 放入 `client/public/models/`。模型为数字复原/艺术化展示，不是文物级扫描。
+- 知识库文章只做事实性摘要并链接原始发布方，不整段复制原文；原文版权归各发布方所有。
+- 字体、模型生成工具和第三方素材的授权需在提交前逐项核对，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `PORT` | 3001 | 后端服务端口 |
-| `APP_ENV` | development | 运行环境 |
-| `DB_PATH` | ./data/nonlegacy.db | SQLite 数据库路径 |
-| `JWT_SECRET` | nonlegacy_dev_secret_key | JWT 签名密钥 |
-| `JWT_EXPIRES_IN` | 168h | JWT 有效期 |
-| `CORS_ORIGIN` | http://localhost:5173 | 允许的跨域来源 |
-| `UPLOAD_DIR` | ./data/models | 模型文件上传目录 |
-| `MAX_UPLOAD_SIZE` | 52428800 | 上传文件大小限制（50MB） |
+## 已知边界
 
-## License
+- 未配置真实模型 Key 时，AI 入口会显示“未配置”，普通浏览不受影响。
+- 向量检索依赖 Embedding 接口；接口不可用时自动退化为 BM25，不影响回答流程。
+- 当前不提供照片识衣（P1）；按比赛计划，P0 稳定后再评估。
+- 高峰期或无网络环境下，模型首 Token 可能超过 3 秒；服务端提供超时与重试状态。
 
-MIT
+## 比赛信息
+
+第九届传智杯 AI WEB 网页开发挑战赛作品。详细改进计划见 [docs/传智杯-AI-WEB-改进计划.md](docs/传智杯-AI-WEB-改进计划.md)。
