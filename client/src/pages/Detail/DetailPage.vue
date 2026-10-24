@@ -87,20 +87,29 @@
                 {{ garment.dynasty }}代 · {{ garment.ethnic }} · {{ garment.province }}
               </p>
             </div>
-            <button
-              @click="toggleFavorite"
-              :class="[
-                'p-2 rounded-full transition-colors',
-                isFavored
-                  ? 'text-mogao-cinnabar bg-mogao-cinnabar-50'
-                  : 'text-mogao-ochre-400 hover:text-mogao-cinnabar hover:bg-mogao-cinnabar-50',
-              ]"
-              :aria-label="isFavored ? '取消收藏' : '添加收藏'"
-            >
-              <svg class="w-6 h-6" :fill="isFavored ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </button>
+            <div class="flex items-center gap-1">
+              <button
+                class="inline-flex items-center gap-1.5 rounded-full border border-mogao-gold-300 bg-mogao-gold-50 px-3 py-2 text-xs font-medium text-mogao-lapis-700 hover:bg-mogao-gold-100 transition-colors"
+                @click="openAi"
+              >
+                <span class="font-serif text-mogao-cinnabar">织</span>
+                问织语
+              </button>
+              <button
+                @click="toggleFavorite"
+                :class="[
+                  'p-2 rounded-full transition-colors',
+                  isFavored
+                    ? 'text-mogao-cinnabar bg-mogao-cinnabar-50'
+                    : 'text-mogao-ochre-400 hover:text-mogao-cinnabar hover:bg-mogao-cinnabar-50',
+                ]"
+                :aria-label="isFavored ? '取消收藏' : '添加收藏'"
+              >
+                <svg class="w-6 h-6" :fill="isFavored ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- 属性列表 -->
@@ -130,13 +139,13 @@
       @close="shareOpen = false"
     />
 
-    <!-- 智能推荐链 -->
+    <!-- 相似馆藏推荐 -->
     <div v-if="recommends.length > 0" class="mt-12">
       <h2 class="title-mogao font-serif text-xl font-bold text-mogao-lapis-800 mb-6">
-        智能推荐链
+        相似馆藏推荐
       </h2>
       <p class="text-xs text-mogao-ochre-500 mb-4">
-        基于工艺、民族、纹样的相似性，推荐以下相关服饰
+        基于民族、工艺与纹样标签的规则匹配，不是 AI 生成结果
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <router-link
@@ -157,13 +166,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, type Ref, type ComputedRef } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, type Ref, type ComputedRef } from 'vue'
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded, type Router } from 'vue-router'
 import { garmentAPI, favoriteAPI, annotationAPI } from '@/services/api'
 import ModelViewer from '@/components/3D/ModelViewer.vue'
 import ShareCardModal from '@/components/3D/ShareCardModal.vue'
 import Skeleton from '@/components/Common/Skeleton.vue'
 import CommentSection from '@/components/Comments/CommentSection.vue'
+import { useAiChat } from '@/composables/useAiChat'
 import type { Garment, RecommendItem } from '@/types/garment'
 import type { ApiResponse } from '@/types/api'
 import type { FavoriteCheckResult } from '@/types/favorite'
@@ -171,6 +181,7 @@ import type { Annotation } from '@/types/annotation'
 
 const route: RouteLocationNormalizedLoaded = useRoute()
 const router: Router = useRouter()
+const ai = useAiChat()
 const garment: Ref<Garment | null> = ref(null)
 const recommends: Ref<RecommendItem[]> = ref([])
 const loading: Ref<boolean> = ref(true)
@@ -191,6 +202,42 @@ function openShare(): void {
 function onHotspotClick(annotation: Annotation): void {
   activeAnnotation.value = annotation
 }
+
+function openAi(): void {
+  if (!garment.value) return
+  ai.open({
+    page: 'detail',
+    garment_id: garment.value.id,
+    ...(activeAnnotation.value ? { annotation_id: activeAnnotation.value.id } : {}),
+  })
+}
+
+function focusAnnotationID(id: number): void {
+  const annotation = annotations.value.find((item) => item.id === id)
+  if (!annotation) return
+  activeAnnotation.value = annotation
+  void nextTick(() => {
+    viewerRef.value?.focusAnnotation?.(id)
+  })
+}
+
+watch(
+  () => ai.actionTick.value,
+  () => {
+    const action = ai.activeAction.value
+    if (!action || action.type !== 'highlight_annotation' || !action.annotation_id) return
+    if (!garment.value || action.garment_id !== garment.value.id) return
+    focusAnnotationID(action.annotation_id)
+  },
+)
+
+watch(
+  () => route.query.annotation,
+  (value) => {
+    const id = Number(value)
+    if (Number.isFinite(id) && id > 0) focusAnnotationID(id)
+  },
+)
 
 const attributes: ComputedRef<[string, string][]> = computed(() => {
   if (!garment.value) return []
@@ -221,6 +268,10 @@ async function loadDetail(id: string | number): Promise<void> {
     .listByGarment(Number(id))
     .then((res) => {
       annotations.value = (res as ApiResponse<Annotation[]>).data || []
+      const requested = Number(route.query.annotation)
+      if (Number.isFinite(requested) && requested > 0) {
+        focusAnnotationID(requested)
+      }
     })
     .catch(() => {
       annotations.value = []
@@ -272,6 +323,10 @@ async function loadDetail(id: string | number): Promise<void> {
     ]
   } finally {
     loading.value = false
+    const requested = Number(route.query.annotation)
+    if (Number.isFinite(requested) && requested > 0) {
+      void nextTick(() => focusAnnotationID(requested))
+    }
   }
 }
 

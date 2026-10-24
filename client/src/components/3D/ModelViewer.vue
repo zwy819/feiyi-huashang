@@ -697,7 +697,17 @@ function capture(): string | null {
   }
 }
 
-defineExpose({ capture })
+/** 聚焦指定热点（AI 导览返回 action 时调用），返回是否找到该标注 */
+function focusAnnotation(id: number): boolean {
+  const annotation = props.annotations.find((item) => item.id === id)
+  if (!annotation) return false
+  showAnnotations.value = true
+  activeAnnotationId.value = id
+  emit('hotspot-click', annotation)
+  return true
+}
+
+defineExpose({ capture, focusAnnotation })
 </script>
 
 <style scoped>
