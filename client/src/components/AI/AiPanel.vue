@@ -8,6 +8,7 @@
         role="dialog"
         aria-modal="true"
         aria-label="织语 AI 导览"
+        :data-streaming="isStreaming ? 'true' : 'false'"
       >
         <header class="relative overflow-hidden bg-mogao-lapis-900 text-white px-5 pt-5 pb-4">
           <div class="absolute -right-10 -top-12 w-40 h-40 rounded-full bg-mogao-gold/20 blur-2xl" />

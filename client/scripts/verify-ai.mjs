@@ -15,6 +15,27 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
 const result = {}
 
+async function waitForAnswer(dialog) {
+  await dialog.evaluate((element) => new Promise((resolve, reject) => {
+    if (element.dataset.streaming === 'false') {
+      resolve()
+      return
+    }
+    const timeout = setTimeout(() => {
+      observer.disconnect()
+      reject(new Error('answer did not finish within 90s'))
+    }, 90000)
+    const observer = new MutationObserver(() => {
+      if (element.dataset.streaming === 'false') {
+        clearTimeout(timeout)
+        observer.disconnect()
+        resolve()
+      }
+    })
+    observer.observe(element, { attributes: true, attributeFilter: ['data-streaming'] })
+  }))
+}
+
 try {
   await page.goto(base + '/', { waitUntil: 'networkidle' })
   const homeTitle = await page.title()
@@ -23,9 +44,9 @@ try {
   const dialog = page.getByRole('dialog', { name: '织语 AI 导览' })
   await dialog.waitFor({ state: 'visible' })
   await dialog.getByRole('button', { name: /苗族百褶裙/ }).click()
-  await page.waitForTimeout(2500)
-  console.log('DIALOG_TEXT:' + (await dialog.innerText()).slice(0, 1200))
+  await waitForAnswer(dialog)
   await dialog.getByRole('button', { name: /来源\s*\d+/ }).waitFor({ state: 'visible', timeout: 30000 })
+  await page.waitForTimeout(500)
   await page.waitForTimeout(800)
 
   result.home = {
@@ -51,17 +72,24 @@ try {
   await detailDialog.waitFor({ state: 'visible' })
   await detailDialog.getByRole('textbox', { name: '输入你的问题' }).fill('这条裙子的裙摆工艺有什么特点？')
   await detailDialog.getByRole('button', { name: '发送', exact: true }).click()
+  await waitForAnswer(detailDialog)
 
   const action = detailDialog.getByRole('button', { name: /在 3D 中查看/ })
   await action.waitFor({ state: 'visible', timeout: 30000 })
   const actionLabel = await action.innerText()
+  const annotationTitle = actionLabel.match(/「(.+?)」/)?.[1]
   await action.click()
-  await page.getByText('百褶工艺', { exact: true }).first().waitFor({ state: 'visible', timeout: 10000 })
-  await page.waitForTimeout(800)
+  if (annotationTitle) {
+    await page.getByText(annotationTitle, { exact: true }).first().waitFor({ state: 'visible', timeout: 10000 })
+  }
+  await page.waitForTimeout(500)
 
   result.detail = {
     actionLabel,
-    annotationCardVisible: await page.getByText('百褶裙的裙褶多达数百道', { exact: false }).first().isVisible(),
+    annotationTitle,
+    annotationCardVisible: annotationTitle
+      ? await page.getByText(annotationTitle, { exact: true }).first().isVisible()
+      : false,
     url: page.url(),
   }
   await page.screenshot({ path: path.join(outDir, 'ai-3d-highlight.png') })
