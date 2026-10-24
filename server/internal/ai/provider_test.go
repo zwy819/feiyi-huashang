@@ -82,3 +82,18 @@ func TestOpenAIProviderReportsHTTPError(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+func TestOpenAIProviderReportsStreamErrorEvent(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprintln(w, `data: {"error":{"message":"quota exceeded"}}`)
+		fmt.Fprintln(w)
+	}))
+	defer server.Close()
+
+	provider := NewOpenAIProvider(server.URL, "test-key", "qwen-plus", "text-embedding-v3", 10*time.Second)
+	_, _, err := provider.ChatStream(context.Background(), nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "quota exceeded") {
+		t.Fatalf("expected quota error, got %v", err)
+	}
+}

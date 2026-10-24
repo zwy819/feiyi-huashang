@@ -102,6 +102,9 @@ func (p *OpenAIProvider) ChatStream(
 			continue
 		}
 		var event struct {
+			Error *struct {
+				Message string `json:"message"`
+			} `json:"error"`
 			Choices []struct {
 				Delta struct {
 					Content string `json:"content"`
@@ -118,6 +121,9 @@ func (p *OpenAIProvider) ChatStream(
 		}
 		if err := json.Unmarshal([]byte(data), &event); err != nil {
 			continue
+		}
+		if event.Error != nil && event.Error.Message != "" {
+			return full.String(), usage, &ProviderError{Status: http.StatusBadGateway, Message: event.Error.Message}
 		}
 		if event.Usage != nil {
 			usage.PromptTokens = event.Usage.PromptTokens
