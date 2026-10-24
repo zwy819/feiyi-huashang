@@ -101,6 +101,14 @@ func TestStripHighlight(t *testing.T) {
 	if strings.Contains(text, "HIGHLIGHT") {
 		t.Fatalf("marker leaked into text: %q", text)
 	}
+
+	text, id = stripHighlight("看看细节。\n[[HIGHLIGHT:3D_讲解_百褶工艺]]")
+	if id != 0 {
+		t.Fatalf("non-numeric highlight should not resolve, got %d", id)
+	}
+	if strings.Contains(text, "HIGHLIGHT") {
+		t.Fatalf("non-numeric marker leaked into text: %q", text)
+	}
 }
 
 func TestDynastyFilterAvoidsSubstringNoise(t *testing.T) {
