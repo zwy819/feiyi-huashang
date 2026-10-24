@@ -109,8 +109,9 @@ func SetupRouter(
 			stats.GET("/sankey", statsHandler.GetSankey)
 		}
 
-		// Report
+		// Report（POST 携带客户端渲染的预览图；GET 兼容旧调用，无图占位）
 		api.GET("/report/generate", reportHandler.Generate)
+		api.POST("/report/generate", reportHandler.Generate)
 
 		// Models (public)
 		models := api.Group("/models")

@@ -142,10 +142,9 @@ export const statisticsAPI = {
 
 // ===== 报告相关 API =====
 export const reportAPI = {
-  /** 生成并下载 PDF 报告 */
-  generate: (params: { ids: string }) =>
-    api.get('/report/generate', {
-      params,
+  /** 生成并下载 PDF 报告（携带客户端离屏渲染的服饰预览图） */
+  generate: (payload: { ids: number[]; images?: Record<string, string> }) =>
+    api.post('/report/generate', payload, {
       responseType: 'blob',
     }),
 }

@@ -601,27 +601,40 @@ GET /api/statistics/overview
 ### 6.1 生成 PDF 报告
 
 ```
-GET /api/report/generate?ids=1,2,3
+POST /api/report/generate
+Content-Type: application/json
 ```
 
-**查询参数：**
+**请求体：**
 
-| 参数 | 类型 | 必填 | 说明 |
+| 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `ids` | string | 是 | 逗号分隔的服饰 ID 列表（如 `1,2,3`） |
+| `ids` | number[] | 是 | 服饰 ID 列表（如 `[1,2,3]`） |
+| `images` | object | 否 | 服饰 ID（字符串键）→ 客户端离屏渲染的预览图 dataURL，仅支持 `data:image/jpeg;base64,` 与 `data:image/png;base64,`；缺失的服饰在报告中显示占位面板 |
+
+```json
+{
+  "ids": [180, 200],
+  "images": {
+    "180": "data:image/jpeg;base64,/9j/4AAQ..."
+  }
+}
+```
+
+> 兼容：`GET /api/report/generate?ids=1,2,3` 仍可用，但不携带预览图。
 
 **成功响应 (200)：**
 
 ```
 Content-Type: application/pdf
-Content-Disposition: attachment; filename="nonlegacy-report-3.pdf"
+Content-Disposition: attachment; filename="nonlegacy-report-2.pdf"
 ```
 
 响应体为二进制 PDF 流。前端通过 `axios({ responseType: 'blob' })` 获取后创建 Blob URL 触发下载。
 
-**PDF 内容：**
-- 封面（标题 "非遗华裳" + 服饰数量）
-- 每件服饰独立一页（名称、朝代、民族、工艺、材质、纹样、省份、文化寓意、描述）
+**PDF 内容（莫高窟配色版式，内嵌楷体/黑体中文字体）：**
+- 封面：金框纸色底、朱砂楷体标题、收录数量与生成日期
+- 每件服饰独立一页：朱砂标题色带（名称 + 朝代·民族）、服饰三维预览图（120mm 见方面板）、两列信息条（朝代、民族、工艺、材质、纹样、省份）、文化寓意与描述段落、页脚页码（第 X 页 / 共 Y 页）
 
 **错误码：**
 
@@ -1056,7 +1069,7 @@ GET /api/health
 | `GET /api/daily` | 无 | — |
 | `GET/POST/DELETE /api/favorites` | JWT 强制 | 返回 401 |
 | `GET /api/statistics/*` | 无 | — |
-| `GET /api/report/generate` | 无 | — |
+| `POST /api/report/generate` | 无 | — |
 | `GET /api/models` 公开 | 无 | — |
 | `GET /api/admin/*` | JWT + admin 角色 | 401（无 token）/ 403（非 admin） |
 
@@ -1319,7 +1332,7 @@ POST /api/quiz/submit
 | 12 | `GET` | `/api/statistics/geo` | 地理分布 | — | — |
 | 13 | `GET` | `/api/statistics/craft-flow` | 工艺流向 | — | — |
 | 14 | `GET` | `/api/statistics/overview` | 概览统计 | — | — |
-| 15 | `GET` | `/api/report/generate` | 生成 PDF 报告 | — | — |
+| 15 | `POST` | `/api/report/generate` | 生成 PDF 报告（GET 兼容） | — | — |
 | 16 | `GET` | `/api/models` | 模型列表（公开） | — | ✅ |
 | 17 | `GET` | `/api/models/:id/file` | 下载模型文件 | — | — |
 | 18 | `GET` | `/api/admin/dashboard` | 仪表盘统计 | JWT+admin | — |
@@ -1347,6 +1360,7 @@ POST /api/quiz/submit
 
 > 与数据库实际状态同步（2026-09-06）。共 40 件服饰，已全部关联 3D 模型；
 > 苗族银衣、彝族擦尔瓦、藏族邦典围裙等 12 件于 2026-09-06 完成压缩并入库，此前不做错误共用。
+> 2026-09-07：40 件服饰已全部配置三点热点标注（共 120 条），坐标由 `tools/seed_annotations.js` 对模型表面射线求交生成。
 
 | ID | 名称 | 朝代 | 民族 | 工艺 | 省份 | 3D 模型 |
 |----|------|------|------|------|------|---------|
