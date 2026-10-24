@@ -63,3 +63,21 @@ func TestRRFKeepsBothRetrievers(t *testing.T) {
 		t.Fatalf("chunk 2 should rank first, got %d", fused[0].ID)
 	}
 }
+
+func TestBundledArticles(t *testing.T) {
+	articles, err := LoadArticles("../../knowledge/articles")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(articles) < 20 {
+		t.Fatalf("expected at least 20 sourced articles, got %d", len(articles))
+	}
+	for _, article := range articles {
+		if article.SourceURL == "" {
+			t.Fatalf("%s has no source URL", article.Slug)
+		}
+		if runeCount(article.Content) < 200 {
+			t.Fatalf("%s is too short: %d runes", article.Slug, runeCount(article.Content))
+		}
+	}
+}
