@@ -81,3 +81,24 @@ func TestBundledArticles(t *testing.T) {
 		}
 	}
 }
+
+func TestSanitizeCitationsDropsInvalidHandles(t *testing.T) {
+	sources := []Source{{ID: "S1"}, {ID: "S2"}}
+	text, used := sanitizeCitations("蜡染用靛蓝染色[S1]，传说内容[S9]，补充[S2]。", sources)
+	if strings.Contains(text, "S9") {
+		t.Fatalf("invalid citation was not removed: %q", text)
+	}
+	if len(used) != 2 || used[0] != "S1" || used[1] != "S2" {
+		t.Fatalf("unexpected used sources: %v", used)
+	}
+}
+
+func TestStripHighlight(t *testing.T) {
+	text, id := stripHighlight("去 3D 看细节。\n[[HIGHLIGHT:12]]")
+	if id != 12 {
+		t.Fatalf("expected highlight 12, got %d", id)
+	}
+	if strings.Contains(text, "HIGHLIGHT") {
+		t.Fatalf("marker leaked into text: %q", text)
+	}
+}

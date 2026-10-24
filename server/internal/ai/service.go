@@ -367,8 +367,16 @@ func (s *Service) chat(ctx context.Context, req ChatRequest, message, conversati
 		query += " " + filters.Summary()
 	}
 	if statsIntent == "" {
-		for _, chunk := range s.retriever.Search(ctx, query, 8) {
+		for _, chunk := range s.retriever.Search(ctx, query, 10) {
 			meta := chunkMeta(chunk)
+			// A named/context garment should not get another garment's 3D
+			// annotations injected into the answer.
+			if meta.SourceType == "annotation" && queryGarment != nil && meta.GarmentID != 0 && meta.GarmentID != queryGarment.ID {
+				continue
+			}
+			if meta.SourceType == "garment" && filters.Ethnic != "" && meta.Ethnic != "" && meta.Ethnic != filters.Ethnic {
+				continue
+			}
 			typ := "资料"
 			switch meta.SourceType {
 			case "garment":
@@ -451,7 +459,7 @@ func (s *Service) chat(ctx context.Context, req ChatRequest, message, conversati
 		usage.CompletionTokens = estimateTokens(finalText)
 	}
 	usage.TotalTokens = usage.PromptTokens + usage.CompletionTokens
-	action := s.resolveAction(ctx, highlightID, contextAnnotation, evidence, finalText)
+	action := s.resolveAction(ctx, highlightID, contextAnnotation, contextGarment, evidence, finalText)
 	if action != nil {
 		if err := emit("action", action); err != nil {
 			return err
@@ -480,7 +488,7 @@ func (s *Service) emitTool(emit EmitFunc, name, summary string, start time.Time)
 	})
 }
 
-func (s *Service) resolveAction(ctx context.Context, highlightID int64, contextAnnotation *model.Annotation, evidence []evidenceItem, answer string) *Action {
+func (s *Service) resolveAction(ctx context.Context, highlightID int64, contextAnnotation *model.Annotation, contextGarment *model.Garment, evidence []evidenceItem, answer string) *Action {
 	if highlightID > 0 {
 		if a, err := s.toolbox.annotationStore.GetByID(highlightID); err == nil {
 			for _, item := range evidence {
@@ -497,6 +505,18 @@ func (s *Service) resolveAction(ctx context.Context, highlightID int64, contextA
 		if item.Source.AnnotationID > 0 && item.Source.Title != "" && strings.Contains(answer, strings.TrimPrefix(item.Source.Title, "3D 讲解 · ")) {
 			if a, err := s.toolbox.annotationStore.GetByID(item.Source.AnnotationID); err == nil {
 				return &Action{Type: "highlight_annotation", GarmentID: a.GarmentID, AnnotationID: a.ID, Label: "在 3D 中查看「" + a.Title + "」"}
+			}
+		}
+	}
+	// When the user is already on a garment page and asks about its details,
+	// offer the first relevant hotspot even if the model forgot the marker.
+	// IDs still come from the server's evidence, never from model output.
+	if contextGarment != nil {
+		for _, item := range evidence {
+			if item.Source.AnnotationID > 0 && item.Source.GarmentID == contextGarment.ID {
+				if a, err := s.toolbox.annotationStore.GetByID(item.Source.AnnotationID); err == nil {
+					return &Action{Type: "highlight_annotation", GarmentID: a.GarmentID, AnnotationID: a.ID, Label: "在 3D 中查看「" + a.Title + "」"}
+				}
 			}
 		}
 	}

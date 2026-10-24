@@ -137,14 +137,37 @@ func mockAnswer(evidence []evidenceItem, message string) string {
 	}
 	for i := 0; i < limit; i++ {
 		item := evidence[i]
-		sentence := strings.TrimSpace(item.Source.Snippet)
-		if sentence == "" {
-			sentence = firstSentence(item.Content, 120)
-		}
+		sentence := mockSnippet(item)
 		fmt.Fprintf(&b, "- %s [%s]\n", sentence, item.Source.ID)
 	}
 	b.WriteString("\n这些信息来自馆藏说明与公开资料摘要。你可以继续问它的工艺细节、地域差异，或让我在 3D 模型里指出对应部位。")
+	for _, item := range evidence {
+		if item.Source.AnnotationID > 0 {
+			fmt.Fprintf(&b, "\n[[HIGHLIGHT:%d]]", item.Source.AnnotationID)
+			break
+		}
+	}
 	return b.String()
+}
+
+func mockSnippet(item evidenceItem) string {
+	s := strings.TrimSpace(item.Source.Snippet)
+	switch item.Source.Type {
+	case "馆藏":
+		if idx := strings.LastIndex(s, "馆藏说明："); idx >= 0 {
+			s = strings.TrimSpace(s[idx+len("馆藏说明："):])
+		}
+	case "3D 讲解":
+		if idx := strings.LastIndex(s, "讲解点："); idx >= 0 {
+			s = strings.TrimSpace(s[idx+len("讲解点："):])
+			title := strings.TrimPrefix(item.Source.Title, "3D 讲解 · ")
+			s = strings.TrimSpace(strings.TrimPrefix(s, title))
+		}
+	}
+	if s == "" {
+		s = firstSentence(item.Content, 120)
+	}
+	return truncateRunes(s, 150)
 }
 
 func firstSentence(s string, max int) string {
