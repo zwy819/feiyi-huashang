@@ -96,7 +96,10 @@ func (t *Toolbox) ExtractFilters(ctx context.Context, query string) (FilterSet, 
 			}
 			for _, part := range parts {
 				part = strings.TrimSpace(part)
-				if part != "" && strings.Contains(query, part) && len([]rune(part)) > len([]rune(*dim.target)) {
+				if part == "" || !matchesDimension(query, dim.column, part) {
+					continue
+				}
+				if len([]rune(part)) > len([]rune(*dim.target)) {
 					*dim.target = part
 				}
 			}
@@ -206,6 +209,14 @@ func (t *Toolbox) GetStatistics(ctx context.Context, dimension string) ([]StatsI
 		items = append(items, item)
 	}
 	return items, rows.Err()
+}
+
+func matchesDimension(query, column, value string) bool {
+	if column == "dynasty" && len([]rune(value)) == 1 {
+		// Avoid matching "清" inside "清晰" or "明" inside "明确".
+		return containsAny(query, []string{value + "代", value + "朝", value + "制"})
+	}
+	return strings.Contains(query, value)
 }
 
 func (t *Toolbox) Similar(ctx context.Context, garmentID int64) ([]GarmentBrief, error) {

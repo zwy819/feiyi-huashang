@@ -102,3 +102,15 @@ func TestStripHighlight(t *testing.T) {
 		t.Fatalf("marker leaked into text: %q", text)
 	}
 }
+
+func TestDynastyFilterAvoidsSubstringNoise(t *testing.T) {
+	if matchesDimension("画面很清晰", "dynasty", "清") {
+		t.Fatal("single-character dynasty must not match inside an unrelated word")
+	}
+	if !matchesDimension("清代服饰有什么特点", "dynasty", "清") {
+		t.Fatal("清代 should match the 清 dynasty")
+	}
+	if !matchesDimension("苗族百褶裙", "ethnic", "苗族") {
+		t.Fatal("ethnic substring should match")
+	}
+}
