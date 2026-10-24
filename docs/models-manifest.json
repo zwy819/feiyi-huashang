@@ -1,0 +1,214 @@
+{
+  "version": "models-v1",
+  "count": 41,
+  "total_bytes": 241691068,
+  "source": "https://github.com/zwy819/feiyi-huashang/releases/tag/models-v1",
+  "note": "3D models are digital/artistic reconstructions, not museum-grade scans.",
+  "files": [
+    {
+      "name": "京族.glb",
+      "size": 5345920,
+      "sha256": "c120b80b404198a6c183204b5c115c1f4cf3943ed9e5caa5fbc721a9f7233c0d"
+    },
+    {
+      "name": "侗族亮布衣.glb",
+      "size": 5855696,
+      "sha256": "d51ba0f73ca01f46d103d2df8cc4b03dbbfe134f639b5fa252478c3f93c8bda8"
+    },
+    {
+      "name": "傣族筒裙.glb",
+      "size": 2628824,
+      "sha256": "f69ed452aac594b4098d9122a9d4058b77883995f90e96c3e0ad44e28836da65"
+    },
+    {
+      "name": "哈尼族树皮衣.glb",
+      "size": 6154264,
+      "sha256": "c1013a00697f19f237f0757b32f7a64de9f5e170b72208108ea6956d3ff78f6b"
+    },
+    {
+      "name": "哈萨克族绣花大衣.glb",
+      "size": 6526960,
+      "sha256": "0670bd33cf7350b34a9757088b97c4fb94d43699142d11749f95b3084fe73bbe"
+    },
+    {
+      "name": "四川蜀绣嫁衣.glb",
+      "size": 5932688,
+      "sha256": "44f5c8ed7dd08a6d4a129c6d9cff72315c78026dcaa6f237fed4f304d473f9bf"
+    },
+    {
+      "name": "回族绣花盖头.glb",
+      "size": 5675472,
+      "sha256": "e020bd1e28fed4156e231374a47f1df803b0925cf7bdff8a5092ac1245317d39"
+    },
+    {
+      "name": "土家族织锦衣裙.glb",
+      "size": 6949648,
+      "sha256": "212a24a177e4f5fe23bc038d98debf34e5adb669b08c0c1063486e80ac839a0c"
+    },
+    {
+      "name": "壮族织锦被面.glb",
+      "size": 6695736,
+      "sha256": "99498168f041999514e31e950d0a4151f3b60db4205fcbcc8649d1597e8ee58d"
+    },
+    {
+      "name": "布依族蜡染裙.glb",
+      "size": 6122184,
+      "sha256": "68868e3d9b7093ff4f47847d654e0426b7d3cc60195692de54e35847b76b1884"
+    },
+    {
+      "name": "广东潮绣婚服.glb",
+      "size": 6639432,
+      "sha256": "5ab5ad033f08647699fb8b13aab6635f36a3389645d372206a8ce2e8cb17d505"
+    },
+    {
+      "name": "彝族.glb",
+      "size": 9403328,
+      "sha256": "fca1b13490fca5b4ba15f30a7dce0eb3c2a058af7cab97caa59bc55b7fca47f2"
+    },
+    {
+      "name": "彝族擦尔瓦.glb",
+      "size": 5351096,
+      "sha256": "155bd6b0d4440fd474bb3fa63e5d794f72c053d4b89511d7eb93148d57e994ff"
+    },
+    {
+      "name": "朝鲜族短袄裙.glb",
+      "size": 5494992,
+      "sha256": "25c977eda567546bf169a45cc77590ebd3f1cd781acd647dba2e52bc6a5879e9"
+    },
+    {
+      "name": "柯尔克孜族白毡帽.glb",
+      "size": 5948164,
+      "sha256": "5626a6b252000ba837b58a035ec73fc9ff6b1deb80b1233df5660ae71cfd4465"
+    },
+    {
+      "name": "汉族杭绣礼服.glb",
+      "size": 6942556,
+      "sha256": "ee4b575b2bbef1b04bd62a30a03fbeefe3be5938e008e083f68d85ffc3054090"
+    },
+    {
+      "name": "汉族缂丝吉服.glb",
+      "size": 6669264,
+      "sha256": "ab9819aeb602a3bd079d3cb890253dcc1f384e25d4735781617fb1c5d25628d7"
+    },
+    {
+      "name": "湖北土家族摆手舞衣.glb",
+      "size": 6504584,
+      "sha256": "830636287ad14ecffe713bc7d07f0b8f601d642e29accaf1e167d98d57363b01"
+    },
+    {
+      "name": "满族旗袍.glb",
+      "size": 6597292,
+      "sha256": "43cbf31a94b4ca1230b97b6246367ac3d155c8d6e2916f1bb7c2eb51676a9ff0"
+    },
+    {
+      "name": "瑶族刺绣盘王衣.glb",
+      "size": 6477184,
+      "sha256": "3805139a48789560f5c45a82a76e0b071ffb4773d28600ef5b737396a36c0899"
+    },
+    {
+      "name": "畲族凤凰装.glb",
+      "size": 6520584,
+      "sha256": "e8154b64deab70b20b0d16b22ffda0b0833cca995a9c21675aabb2a5e64347d1"
+    },
+    {
+      "name": "白族扎染上衣.glb",
+      "size": 6001684,
+      "sha256": "514d8cecf165af9d6644997a1580be519368f87090813e2943836a3e530eec3a"
+    },
+    {
+      "name": "福建惠安女服饰.glb",
+      "size": 6330540,
+      "sha256": "9867ef093768bb07ae565cfd8d4d89237153171b6a9b5a6091a371924e5726df"
+    },
+    {
+      "name": "维吾尔艾德莱斯裙.glb",
+      "size": 6237708,
+      "sha256": "47b94fb839d33636157f2b82110d78ad8defc85bb586fc5834d9b17043734a50"
+    },
+    {
+      "name": "羌族云云鞋.glb",
+      "size": 5738204,
+      "sha256": "d46e4382f1661e8c5864ffd4d2dea456fd6c66ea7a65a426e767b7157d293d91"
+    },
+    {
+      "name": "苏绣旗袍.glb",
+      "size": 1721892,
+      "sha256": "f8f97671f636135e116217ff66e7943648813157a6f761c6f72d7971bf86e6a3"
+    },
+    {
+      "name": "苗族挑花头帕.glb",
+      "size": 6425312,
+      "sha256": "0c478c29b7385c51d2e3542dab872f2ef882208fb5f353007328024976ff37a0"
+    },
+    {
+      "name": "苗族百褶裙.glb",
+      "size": 3125036,
+      "sha256": "abbf3e86d9702a555d789c55822fd47b4fd6260077f6e86c7a58bedd8b876f2f"
+    },
+    {
+      "name": "苗族花带裙.glb",
+      "size": 6665392,
+      "sha256": "c4ae7512ab1c99bcc8eb6636f5cdf7e098760ba32c692d4098a6ff3a4b796f3b"
+    },
+    {
+      "name": "苗族银衣.glb",
+      "size": 6672912,
+      "sha256": "1336bc6fa9c95e3d6ac29ac42669936a4f0fa635da2e006cb15a62ccecb2e219"
+    },
+    {
+      "name": "蒙古族喀尔喀袍.glb",
+      "size": 2293416,
+      "sha256": "a3327849c7e5d651e69d45e48fddc5a9000c12ab655e9ba753b3ca47d610b0ae"
+    },
+    {
+      "name": "蒙古族长袍.glb",
+      "size": 6234936,
+      "sha256": "ecfa75296fd66b563dfbb9a6011e1a2dc14b78b170d1bfe6dc0088d67c74a5cb"
+    },
+    {
+      "name": "藏族安多袍.glb",
+      "size": 5860420,
+      "sha256": "ba0fc91ad2978dcebd3c1c907f5c03b6616bbfc092d5f78a4cb810a0fad840b0"
+    },
+    {
+      "name": "藏族氆氇袍.glb",
+      "size": 2615700,
+      "sha256": "f55341ab934c50f277666c00ac9ab0dbfe739866dcc8783d10717968cef537d2"
+    },
+    {
+      "name": "藏族邦典围裙.glb",
+      "size": 5724724,
+      "sha256": "9b3dd30406f3d698cde1b818ca6c02b18668bc16a5bdbfcbadb5ecc2451bfbe2"
+    },
+    {
+      "name": "裕固族红缨帽.glb",
+      "size": 6622060,
+      "sha256": "94ad8c31ac70dcb15957073b3d265645cc66d3057dd3311d38eed15d2cb647f9"
+    },
+    {
+      "name": "赫哲族鱼皮衣.glb",
+      "size": 6090112,
+      "sha256": "09fe6f615de8791b79a09ca10208e52e675cfa8e41f27c8f9cf59226fdbb4f85"
+    },
+    {
+      "name": "门巴族氆氇袍.glb",
+      "size": 5730384,
+      "sha256": "61c95a875be3f3bb0b48e751d35a505cfa121c32ad0e94821ddc90872e2d2cd6"
+    },
+    {
+      "name": "陕西肚兜.glb",
+      "size": 6465912,
+      "sha256": "dce3425196f2a05046ab2d40abd2e0e70c95eefabaf1d0349775dc2a00caf641"
+    },
+    {
+      "name": "高山族贝珠衣.glb",
+      "size": 8360292,
+      "sha256": "33c1ad969e0c50583b51bef90b387d03d65537d46bf2c7386e2193db43782e2c"
+    },
+    {
+      "name": "黎族筒裙.glb",
+      "size": 6338564,
+      "sha256": "29204b8becaa0acf33998c97c201ed5da91dfa0747ebc1c8da73f130446e3c80"
+    }
+  ]
+}

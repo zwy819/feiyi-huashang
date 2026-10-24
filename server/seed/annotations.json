@@ -1,0 +1,1073 @@
+[
+  {
+    "garment_name": "苗族百褶裙",
+    "title": "百褶工艺",
+    "content": "百褶裙的裙褶多达数百道，象征苗族祖先迁徙途中翻越的山川，每一道褶皱都是一段迁徙的记忆。",
+    "position_x": 0.0,
+    "position_y": 0.2332,
+    "position_z": 0.1621,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "苗族百褶裙",
+    "title": "蜡染底纹",
+    "content": "以铜刀蘸熔蜡绘于布面，经蓝靛浸染后脱蜡显花，几何纹代表星空与大地，蓝白相间清雅古朴。",
+    "position_x": 0.0,
+    "position_y": -0.0466,
+    "position_z": 0.2285,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "苗族百褶裙",
+    "title": "裙摆刺绣",
+    "content": "花卉纹绣于裙摆之上，寓意生命繁衍，与蜡染底纹相映成趣，是蜡染与刺绣双重工艺的结晶。",
+    "position_x": 0.0,
+    "position_y": -0.3731,
+    "position_z": 0.2673,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "苗族银衣",
+    "title": "银角银铃",
+    "content": "领口缀满手工打制的银角与银铃，行走时铃音清脆，银饰闪烁如星，是苗族驱邪避凶的护身圣物。",
+    "position_x": 0.0,
+    "position_y": 0.2001,
+    "position_z": 0.1545,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "苗族银衣",
+    "title": "龙凤银牌",
+    "content": "胸前龙凤纹大银牌左右对称，银片间以细链相连，寓意龙凤呈祥，银匠技艺代代相传。",
+    "position_x": 0.0,
+    "position_y": -0.0727,
+    "position_z": 0.124,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "苗族银衣",
+    "title": "下摆银坠",
+    "content": "下摆银坠成排齐整，整件盛装重达十余公斤，需数年打制，是苗族银饰锻造技艺的集大成之作。",
+    "position_x": -0.2738,
+    "position_y": -0.3819,
+    "position_z": -0.0657,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "侗族亮布衣",
+    "title": "亮布光泽",
+    "content": "面料经蓝靛反复浸染，再以木槌捶打上万次，布面呈现紫铜色金属光泽，象征光明与希望。",
+    "position_x": 0.0,
+    "position_y": 0.1966,
+    "position_z": 0.1422,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "侗族亮布衣",
+    "title": "太阳纹绣片",
+    "content": "胸前太阳纹绣片精致醒目，寄托侗族对光明与生命的崇拜，几何纹饰条沿衣襟对称分布。",
+    "position_x": 0.0,
+    "position_y": -0.0715,
+    "position_z": 0.1676,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "侗族亮布衣",
+    "title": "几何纹镶边",
+    "content": "前襟与下摆以几何纹刺绣镶边收束，与亮布的金属光泽相映，是侗族节庆盛装的点睛之笔。",
+    "position_x": 0.0,
+    "position_y": -0.3753,
+    "position_z": 0.1643,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "布依族蜡染裙",
+    "title": "蜡染漩涡纹",
+    "content": "裙身漩涡纹以铜刀蘸蜡绘就，象征布依族对水的崇拜，蓝靛浸染脱蜡后纹样清雅古朴。",
+    "position_x": 0.0,
+    "position_y": 0.126,
+    "position_z": 0.0984,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "布依族蜡染裙",
+    "title": "冰裂纹理",
+    "content": "蜡层靛染时自然龟裂，形成独特的冰裂状晕纹，每一条裙子的裂纹都独一无二。",
+    "position_x": 0.0,
+    "position_y": -0.1575,
+    "position_z": 0.183,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "布依族蜡染裙",
+    "title": "鱼纹裙摆",
+    "content": "裙摆鱼纹饰带寓意丰收与富足，蓝底白花相映成趣，展现布依族与自然的和谐共生。",
+    "position_x": 0.0,
+    "position_y": -0.4725,
+    "position_z": 0.2264,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "苗族挑花头帕",
+    "title": "八角花纹",
+    "content": "数纱挑花的八角花纹居中四方连续，八角象征宇宙八方，以布面经纬为坐标全凭心算挑绣。",
+    "position_x": 0.0,
+    "position_y": 0.2197,
+    "position_z": -0.0334,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "苗族挑花头帕",
+    "title": "蝴蝶纹饰",
+    "content": "蝴蝶是苗族创世神话中的万物之母，对称点缀于纹样之间，承载着苗族对祖先的敬仰。",
+    "position_x": 0.0,
+    "position_y": -0.0549,
+    "position_z": -0.0291,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "苗族挑花头帕",
+    "title": "挑花针脚",
+    "content": "针脚呈细密十字形，无需画稿正反两面工整如一，是苗族女性空间观念与智慧的结晶。",
+    "position_x": 0.0,
+    "position_y": -0.4173,
+    "position_z": -0.0075,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "傣族筒裙",
+    "title": "织锦孔雀纹",
+    "content": "孔雀是傣族的吉祥物，织锦图案绚丽多彩，经纬之间织入傣锦的千年技艺。",
+    "position_x": 0.0,
+    "position_y": 0.1387,
+    "position_z": 0.0339,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "傣族筒裙",
+    "title": "紧身筒形",
+    "content": "筒裙紧身合体，行走时裙摆微动，尽显傣家女子的婀娜身姿。",
+    "position_x": 0.0,
+    "position_y": -0.1734,
+    "position_z": 0.0342,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "傣族筒裙",
+    "title": "几何纹饰带",
+    "content": "几何纹织带环裙排列，色彩搭配明快，是傣族女性日常与节庆的重要装束。",
+    "position_x": 0.0,
+    "position_y": -0.5203,
+    "position_z": 0.0228,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "彝族蜡染百褶裙",
+    "title": "蜡染火焰纹",
+    "content": "裙身以蜡染绘制火焰纹，象征彝族对火的崇拜与敬畏，蓝白纹样古朴有力。",
+    "position_x": 0.0,
+    "position_y": 0.1145,
+    "position_z": -0.0709,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "彝族蜡染百褶裙",
+    "title": "贴布绣饰",
+    "content": "裙摆以彩色布片贴绣几何纹样，与蜡染底纹相映成趣，双重工艺融为一体。",
+    "position_x": 0.0,
+    "position_y": -0.1431,
+    "position_z": -0.0684,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "彝族蜡染百褶裙",
+    "title": "百褶裙摆",
+    "content": "百褶设计让裙摆展开如孔雀开屏，行走时似火焰摇曳，动感十足。",
+    "position_x": 0.0,
+    "position_y": -0.4294,
+    "position_z": -0.0591,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "白族扎染上衣",
+    "title": "扎染晕纹",
+    "content": "纱线捆扎布料后浸入板蓝根染液，解开形成自然晕染，蓝白过渡如云似水。",
+    "position_x": 0.0,
+    "position_y": 0.181,
+    "position_z": 0.0945,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "白族扎染上衣",
+    "title": "蝴蝶花纹",
+    "content": "前襟蝴蝶花纹簇拥成趣，每一个扎结都蕴含着白族妇女对生活的美好祝愿。",
+    "position_x": 0.0,
+    "position_y": -0.0658,
+    "position_z": 0.0951,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "白族扎染上衣",
+    "title": "几何纹领口",
+    "content": "领口与袖口以几何纹边条收束，清新素雅，是大理周城千年扎染技艺的缩影。",
+    "position_x": 0.0,
+    "position_y": -0.3455,
+    "position_z": 0.088,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "哈尼族树皮衣",
+    "title": "树皮纤维",
+    "content": "选用构树树皮经浸泡捶打漂洗制成纤维布，质地柔软，是人类最古老的服饰形态之一。",
+    "position_x": 0.0,
+    "position_y": 0.2296,
+    "position_z": -0.1015,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "哈尼族树皮衣",
+    "title": "对襟缝线",
+    "content": "对襟无扣以缝线连接裁片，针脚朴拙实用，保留着人类服饰最初的形制。",
+    "position_x": 0.0,
+    "position_y": -0.0835,
+    "position_z": -0.0918,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "哈尼族树皮衣",
+    "title": "原始斑纹",
+    "content": "衣面斑驳纹理为树皮天然印记，无染无绣，体现了人与自然最原始的和谐。",
+    "position_x": 0.0,
+    "position_y": -0.4384,
+    "position_z": -0.1209,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "彝族擦尔瓦",
+    "title": "羊毛擀毡",
+    "content": "优质羊毛擀制成毡，质地厚实保暖，白色象征纯洁与高贵，昼夜为衣为被。",
+    "position_x": 0.0,
+    "position_y": 0.2347,
+    "position_z": 0.191,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "彝族擦尔瓦",
+    "title": "挑花饰带",
+    "content": "胸前几何条纹挑花饰带中央绣日月纹，是彝族人身份与审美的标志。",
+    "position_x": 0.0,
+    "position_y": -0.0854,
+    "position_z": 0.1955,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "彝族擦尔瓦",
+    "title": "百褶毡摆",
+    "content": "下摆毡褶细密垂顺，行走时如流水摆动，体现高寒山区的生活智慧。",
+    "position_x": 0.0,
+    "position_y": -0.4481,
+    "position_z": 0.1702,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "羌族云云鞋",
+    "title": "云纹鞋面",
+    "content": "鞋面满绣彩色云纹，寄托羌族对天的敬仰，针脚细密色彩艳丽。",
+    "position_x": 0.0937,
+    "position_y": 0.156,
+    "position_z": -0.0207,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "羌族云云鞋",
+    "title": "上翘鞋尖",
+    "content": "鞋尖微微上翘如羊角，羊是羌族图腾，承载着从游牧到农耕的文化记忆。",
+    "position_x": -0.1733,
+    "position_y": -0.156,
+    "position_z": -0.1103,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "羌族云云鞋",
+    "title": "挑花鞋帮",
+    "content": "鞋帮以精细挑花与刺绣装饰，一针一线皆心意，是羌族服饰文化的重要标志。",
+    "position_x": 0.2828,
+    "position_y": -0.468,
+    "position_z": 0.0807,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "四川蜀绣嫁衣",
+    "title": "龙凤呈祥",
+    "content": "胸前龙凤呈祥绣片以晕针切针绣成，寓意夫妻和谐美满，绣工精细入微。",
+    "position_x": 0.1358,
+    "position_y": 0.1878,
+    "position_z": 0.0404,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "四川蜀绣嫁衣",
+    "title": "芙蓉花纹",
+    "content": "芙蓉花是成都的象征，沿前襟与下摆分布，色彩丰富层次分明。",
+    "position_x": 0.1358,
+    "position_y": -0.0683,
+    "position_z": 0.0256,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "四川蜀绣嫁衣",
+    "title": "金线盘绣",
+    "content": "金线盘绣镶边勾勒轮廓，与大红绸缎交相辉映，是中国四大名绣的典型代表。",
+    "position_x": 0.1358,
+    "position_y": -0.3585,
+    "position_z": 0.0927,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "藏族氆氇袍",
+    "title": "氆氇织造",
+    "content": "氆氇是藏族最具代表性的手工织品，以羊毛捻线织造，厚实保暖，适应高原多变的气候。",
+    "position_x": 0.0,
+    "position_y": 0.3099,
+    "position_z": 0.0301,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "藏族氆氇袍",
+    "title": "几何条纹",
+    "content": "袍身织入规整的几何条纹，色彩沉稳对比鲜明，体现藏族人民对秩序与自然的审美表达。",
+    "position_x": 0.0,
+    "position_y": -0.0516,
+    "position_z": 0.0563,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "藏族氆氇袍",
+    "title": "下摆镶边",
+    "content": "袍身宽大便于骑马劳作，下摆以同料镶边收束，整体庄重古朴，是高原生活智慧的缩影。",
+    "position_x": 0.0,
+    "position_y": -0.3615,
+    "position_z": 0.0519,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "藏族邦典围裙",
+    "title": "彩虹条纹",
+    "content": "横向彩虹条纹细密相间，象征彩虹，是藏族女性成年的标志，每种颜色都是一种祝福。",
+    "position_x": 0.0,
+    "position_y": 0.2109,
+    "position_z": 0.1363,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "藏族邦典围裙",
+    "title": "氆氇织造",
+    "content": "羊毛与丝线交织出细密纹理，日喀则邦典织造技艺已列入国家级非物质文化遗产。",
+    "position_x": 0.0,
+    "position_y": -0.0527,
+    "position_z": 0.121,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "藏族邦典围裙",
+    "title": "深色包边",
+    "content": "上端配深色腰带便于系束，四缘包边收口，色彩明快而不失稳重。",
+    "position_x": 0.0815,
+    "position_y": -0.4008,
+    "position_z": 0.1218,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "门巴族氆氇袍",
+    "title": "白色十字纹",
+    "content": "白色十字纹象征太阳和四方，体现门巴族原始苯教信仰中对自然的崇拜。",
+    "position_x": 0.0,
+    "position_y": 0.2451,
+    "position_z": 0.1234,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "门巴族氆氇袍",
+    "title": "氆氇织面",
+    "content": "羊毛氆氇厚实保暖，与藏式袍服一脉相承又独具门巴特色。",
+    "position_x": 0.0,
+    "position_y": -0.0891,
+    "position_z": 0.1405,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "门巴族氆氇袍",
+    "title": "下摆镶饰",
+    "content": "十字纹沿下摆延续收边，袍身宽大，是喜马拉雅南麓高寒生活的智慧结晶。",
+    "position_x": 0.0,
+    "position_y": -0.468,
+    "position_z": 0.1413,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "维吾尔艾德莱斯裙",
+    "title": "艾德莱斯纹",
+    "content": "扎染经线织出如水彩晕染的纹样，巴旦木纹与波浪纹流动其间，无法复制。",
+    "position_x": 0.0,
+    "position_y": 0.1161,
+    "position_z": 0.1918,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "维吾尔艾德莱斯裙",
+    "title": "丝绸光泽",
+    "content": "和田丝绸经线分段扎染后织造，色彩晕染自然，是丝绸之路上的瑰宝。",
+    "position_x": 0.0,
+    "position_y": -0.1452,
+    "position_z": 0.2308,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "维吾尔艾德莱斯裙",
+    "title": "裙摆飘逸",
+    "content": "裙摆宽大飘逸，行走时色彩流动如沙漠绿洲，展现维吾尔族的热情与创造力。",
+    "position_x": 0.0,
+    "position_y": -0.4355,
+    "position_z": 0.2715,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "哈萨克族绣花大衣",
+    "title": "羊角纹刺绣",
+    "content": "领口袖口羊角纹刺绣精美，象征牛羊成群、生活富足。",
+    "position_x": 0.0,
+    "position_y": 0.2388,
+    "position_z": 0.0006,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "哈萨克族绣花大衣",
+    "title": "贴花工艺",
+    "content": "厚实呢料之上贴花与刺绣并用，色彩明艳对比强烈，尽显草原豪迈。",
+    "position_x": 0.0,
+    "position_y": -0.0868,
+    "position_z": 0.0005,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "哈萨克族绣花大衣",
+    "title": "鹰纹下摆",
+    "content": "下摆纹样融入鹰图腾元素，鹰是哈萨克族精神的象征，展翅欲飞。",
+    "position_x": 0.0,
+    "position_y": -0.456,
+    "position_z": -0.0404,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "柯尔克孜族白毡帽",
+    "title": "卷草帽顶",
+    "content": "帽顶绣卷草纹圆花，白色象征雪山般纯洁的品格，毡面细腻洁白。",
+    "position_x": 0.0,
+    "position_y": 0.0415,
+    "position_z": 0.3178,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "柯尔克孜族白毡帽",
+    "title": "几何纹帽身",
+    "content": "帽身一圈几何纹刺绣精美，是柯尔克孜族民族认同的重要标志。",
+    "position_x": 0.0,
+    "position_y": -0.1038,
+    "position_z": 0.351,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "柯尔克孜族白毡帽",
+    "title": "上翻帽檐",
+    "content": "帽檐两侧微微上翻如天山雪峰，御寒保暖之余更显巍峨气度。",
+    "position_x": 0.0,
+    "position_y": -0.1993,
+    "position_z": 0.5219,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "壮族织锦被面",
+    "title": "壮锦图案",
+    "content": "通经断纬织出菱形纹、蛙纹与太阳纹，与云锦、蜀锦、宋锦并称中国四大名锦。",
+    "position_x": 0.0,
+    "position_y": 0.1699,
+    "position_z": 0.1906,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "壮族织锦被面",
+    "title": "蛙纹图腾",
+    "content": "蛙是壮族的图腾，象征雨水与丰收，太阳纹代表光明与生命。",
+    "position_x": 0.0,
+    "position_y": -0.0425,
+    "position_z": 0.2443,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "壮族织锦被面",
+    "title": "织造结构",
+    "content": "棉线为经、彩色丝线为纬，结构严谨色彩对比强烈，织造技艺精湛。",
+    "position_x": 0.0,
+    "position_y": -0.3228,
+    "position_z": 0.3146,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "瑶族刺绣盘王衣",
+    "title": "盘王印图案",
+    "content": "通身绣满盘王印，是瑶族子孙认祖归宗的标志，承载迁徙的历史记忆。",
+    "position_x": 0.0,
+    "position_y": 0.251,
+    "position_z": 0.0537,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "瑶族刺绣盘王衣",
+    "title": "龙犬纹饰",
+    "content": "龙犬纹讲述盘瓠传说，绣工精细繁复，一件盛装往往需数年才能完成。",
+    "position_x": 0.0,
+    "position_y": -0.0913,
+    "position_z": 0.1058,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "瑶族刺绣盘王衣",
+    "title": "祭祀盛装",
+    "content": "瑶族祭祀盘王时的礼服，通身刺绣繁复华丽，是瑶族刺绣技艺的最高体现。",
+    "position_x": 0.0,
+    "position_y": -0.4792,
+    "position_z": 0.1299,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "土家族织锦衣裙",
+    "title": "台台花纹",
+    "content": "台台花是土家族对虎的抽象表达，体现了白虎图腾崇拜的悠久传统。",
+    "position_x": 0.0,
+    "position_y": 0.2439,
+    "position_z": 0.093,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "土家族织锦衣裙",
+    "title": "阳雀花纹",
+    "content": "阳雀花象征报春与希望，以古老斜织腰机通经断纬织就。",
+    "position_x": 0.0,
+    "position_y": -0.0887,
+    "position_z": 0.1192,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "土家族织锦衣裙",
+    "title": "西兰卡普",
+    "content": "土家织锦图案多达百余种，色彩古朴厚重，被誉为纺织业的活化石。",
+    "position_x": 0.0,
+    "position_y": -0.4657,
+    "position_z": 0.1642,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "苗族花带裙",
+    "title": "花带拼接",
+    "content": "数十条手工花带拼接成裙，每条宽仅数厘米却织满精美繁复的几何图案。",
+    "position_x": 0.0,
+    "position_y": 0.1202,
+    "position_z": 0.0984,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "苗族花带裙",
+    "title": "八角花纹",
+    "content": "花带上的八角花与菱形纹交织，蕴含着编织者的祝福和心意。",
+    "position_x": 0.0,
+    "position_y": -0.1502,
+    "position_z": 0.1174,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "苗族花带裙",
+    "title": "裙摆飘带",
+    "content": "行走时花带飘动色彩斑斓，花带是湘西苗族女性传递情感的媒介。",
+    "position_x": 0.0,
+    "position_y": -0.4507,
+    "position_z": 0.1371,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "蒙古族长袍",
+    "title": "镶边工艺",
+    "content": "领口袖口镶边精美，适应草原游牧生活的需要，兼具实用性与艺术性。",
+    "position_x": 0.0,
+    "position_y": 0.2438,
+    "position_z": 0.1146,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "蒙古族长袍",
+    "title": "云纹刺绣",
+    "content": "云纹与动物纹绣于袍身，展现蒙古族对草原和自然的敬畏。",
+    "position_x": 0.0,
+    "position_y": -0.0886,
+    "position_z": 0.1495,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "蒙古族长袍",
+    "title": "宽袍大袖",
+    "content": "宽大版型便于骑射劳作，尽显游牧民族的豪迈气概。",
+    "position_x": 0.0,
+    "position_y": -0.4654,
+    "position_z": 0.1516,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "蒙古族喀尔喀袍",
+    "title": "如意纹镶边",
+    "content": "多层镶边绣如意纹与盘肠纹，每一道镶边都代表着一重吉祥祝福。",
+    "position_x": 0.0,
+    "position_y": 0.2361,
+    "position_z": 0.0456,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "蒙古族喀尔喀袍",
+    "title": "贴花刺绣",
+    "content": "贴花与刺绣并用，盘肠纹寓意吉祥绵延不绝，工艺考究。",
+    "position_x": 0.0,
+    "position_y": -0.0858,
+    "position_z": 0.0636,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "蒙古族喀尔喀袍",
+    "title": "隆起肩部",
+    "content": "肩部隆起如山峰，象征蒙古族对圣山的崇拜，整体端庄大气。",
+    "position_x": 0.0,
+    "position_y": -0.4507,
+    "position_z": 0.0602,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "苏绣旗袍",
+    "title": "立领盘扣",
+    "content": "传统旗袍立领配手工盘扣，一扣一结皆为心思，勾勒出东方女性的端庄与含蓄。",
+    "position_x": 0.0,
+    "position_y": 0.4137,
+    "position_z": 0.063,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "苏绣旗袍",
+    "title": "花鸟绣面",
+    "content": "苏绣以细雅洁著称，花鸟纹样针法细腻、劈丝如发，色彩层次丰富，是中国四大名绣之首的代表。",
+    "position_x": 0.0,
+    "position_y": 0.0591,
+    "position_z": 0.0698,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "苏绣旗袍",
+    "title": "旗袍下摆",
+    "content": "下摆与侧衩处以手工滚边收口，行走间开衩微露，尽显江南水乡的柔美线条。",
+    "position_x": 0.0,
+    "position_y": -0.3546,
+    "position_z": 0.0551,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "汉族缂丝吉服",
+    "title": "缂丝工艺",
+    "content": "通经断纬，图案与面料一体成型，素有「一寸缂丝一寸金」之说。",
+    "position_x": 0.0,
+    "position_y": 0.2444,
+    "position_z": 0.0764,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "汉族缂丝吉服",
+    "title": "云龙纹样",
+    "content": "花卉纹与云龙纹织入吉服，承载着对穿着者的最高祝福与尊崇。",
+    "position_x": 0.0,
+    "position_y": -0.0889,
+    "position_z": 0.0885,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "汉族缂丝吉服",
+    "title": "金线织造",
+    "content": "金线点缀其间，一件吉服往往需数年织成，是皇家贵族的专属奢华。",
+    "position_x": 0.0,
+    "position_y": -0.4666,
+    "position_z": 0.0993,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "汉族杭绣礼服",
+    "title": "西湖景致",
+    "content": "以西湖山水为灵感源泉，将江南的诗情画意融入一针一线。",
+    "position_x": 0.0,
+    "position_y": 0.2445,
+    "position_z": 0.0908,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "汉族杭绣礼服",
+    "title": "花卉纹绣",
+    "content": "针法细腻多变，色彩清雅秀丽，传承南宋宫廷刺绣遗风。",
+    "position_x": 0.0,
+    "position_y": -0.0889,
+    "position_z": 0.1372,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "汉族杭绣礼服",
+    "title": "礼服形制",
+    "content": "剪裁得体端庄大方，与苏绣、湘绣齐名，是江南刺绣的重要流派。",
+    "position_x": 0.0,
+    "position_y": -0.4667,
+    "position_z": 0.1485,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "畲族凤凰装",
+    "title": "凤凰纹绣",
+    "content": "凤凰是畲族图腾，传说畲族始祖是凤凰化身，穿上凤凰装即获凤凰的祝福。",
+    "position_x": 0.0,
+    "position_y": 0.2522,
+    "position_z": -0.0747,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "畲族凤凰装",
+    "title": "牡丹纹饰",
+    "content": "牡丹纹与凤凰纹相映成趣，红色主调艳丽喜庆，是畲族女性的婚礼盛装。",
+    "position_x": 0.0,
+    "position_y": -0.0917,
+    "position_z": 0.1273,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "畲族凤凰装",
+    "title": "腰间织带",
+    "content": "腰系手工织带，与凤凰冠配套穿着，展现畲族独特的审美追求。",
+    "position_x": 0.0,
+    "position_y": -0.4815,
+    "position_z": 0.1488,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "广东潮绣婚服",
+    "title": "垫高绣法",
+    "content": "潮绣特有的垫高绣法使绣面立体如浮雕，金线银线交叠，金碧辉煌。",
+    "position_x": 0.0,
+    "position_y": 0.2184,
+    "position_z": 0.1085,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "广东潮绣婚服",
+    "title": "龙凤盘金",
+    "content": "金线银线盘绣龙凤与牡丹，象征婚姻的珍贵与永恒。",
+    "position_x": 0.0,
+    "position_y": -0.0794,
+    "position_z": 0.1524,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "广东潮绣婚服",
+    "title": "婚服形制",
+    "content": "大红婚服富丽堂皇，是粤绣重要分支潮绣的巅峰之作。",
+    "position_x": 0.0,
+    "position_y": -0.417,
+    "position_z": 0.1304,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "福建惠安女服饰",
+    "title": "花头巾",
+    "content": "黄斗笠配花头巾，遮阳挡风，是惠安女最具辨识度的经典装扮。",
+    "position_x": 0.0,
+    "position_y": 0.2307,
+    "position_z": -0.0095,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "福建惠安女服饰",
+    "title": "短上衣",
+    "content": "紧身短上衣配色大胆鲜艳，「节约衣」之名由此而来，造型独特。",
+    "position_x": 0.0,
+    "position_y": -0.0839,
+    "position_z": 0.0046,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "福建惠安女服饰",
+    "title": "宽腿裤",
+    "content": "裤腿异常宽大，便于滩涂劳作，体现闽南女性勤劳坚韧的品格。",
+    "position_x": 0.1183,
+    "position_y": -0.4404,
+    "position_z": -0.0086,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "藏族安多袍",
+    "title": "羔皮镶边",
+    "content": "领口、袖口和下摆镶有名贵的羔皮，是安多藏族身份的象征。",
+    "position_x": 0.0,
+    "position_y": 0.1598,
+    "position_z": 0.0319,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "藏族安多袍",
+    "title": "氆氇袍身",
+    "content": "厚实氆氇面料适应高原多变气候，束腰后形成自然的兜囊。",
+    "position_x": 0.0,
+    "position_y": -0.0581,
+    "position_z": 0.0656,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "藏族安多袍",
+    "title": "宽袍形制",
+    "content": "袍身宽大便于游牧携带物品，是高原生活智慧的体现。",
+    "position_x": 0.0,
+    "position_y": -0.3051,
+    "position_z": 0.0758,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "裕固族红缨帽",
+    "title": "红色流苏",
+    "content": "帽顶红色流苏象征太阳，是裕固族女性最具特色的头饰。",
+    "position_x": 0.0,
+    "position_y": 0.0884,
+    "position_z": 0.2861,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "裕固族红缨帽",
+    "title": "珊瑚珠绣",
+    "content": "帽身绣满彩色丝线与珊瑚珠，珊瑚珠代表珍贵与吉祥。",
+    "position_x": 0.0,
+    "position_y": -0.2209,
+    "position_z": -0.2741,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "裕固族红缨帽",
+    "title": "尖顶帽身",
+    "content": "尖顶帽身以白羊毛擀制，造型反映裕固族从西域迁徙而来的渊源。",
+    "position_x": 0.0,
+    "position_y": -0.4242,
+    "position_z": -0.283,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "回族绣花盖头",
+    "title": "刺绣花纹",
+    "content": "边缘绣有花卉与几何纹样，融合中国传统纹样与伊斯兰文化元素。",
+    "position_x": 0.0,
+    "position_y": 0.1298,
+    "position_z": -0.2454,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "回族绣花盖头",
+    "title": "轻盈纱料",
+    "content": "丝绸纱料轻盈飘逸，宁夏盖头以素雅清丽的风格著称。",
+    "position_x": 0.0,
+    "position_y": -0.0325,
+    "position_z": -0.2455,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "回族绣花盖头",
+    "title": "盖头形制",
+    "content": "盖头是回族女性信仰与美的结合，是回族服饰文化的重要符号。",
+    "position_x": 0.0,
+    "position_y": -0.2467,
+    "position_z": -0.0539,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "陕西肚兜",
+    "title": "五毒纹样",
+    "content": "绣蝎子、蜈蚣、蟾蜍、壁虎、蛇五种毒虫，寓意以毒攻毒、驱邪避害。",
+    "position_x": 0.0,
+    "position_y": 0.1717,
+    "position_z": 0.0115,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "陕西肚兜",
+    "title": "莲花纹饰",
+    "content": "莲花纹象征连生贵子，寄托着长辈对孩童健康成长的深切祝福。",
+    "position_x": 0.0,
+    "position_y": -0.0624,
+    "position_z": 0.1161,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "陕西肚兜",
+    "title": "贴身形制",
+    "content": "大红棉布为底贴身穿着，针法古朴，是关中民间刺绣的典型代表。",
+    "position_x": 0.0,
+    "position_y": -0.3278,
+    "position_z": 0.1884,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "湖北土家族摆手舞衣",
+    "title": "摆手纹饰",
+    "content": "舞衣图案记录着土家族迁徙和发展的历史，是穿在身上的史诗。",
+    "position_x": 0.0,
+    "position_y": 0.1608,
+    "position_z": 0.0176,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "湖北土家族摆手舞衣",
+    "title": "西兰卡普纹",
+    "content": "衣身以土家织锦装饰，红黑主调在摆手舞中鲜艳夺目。",
+    "position_x": 0.0,
+    "position_y": -0.0585,
+    "position_z": 0.0285,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "湖北土家族摆手舞衣",
+    "title": "袖口领口绣",
+    "content": "袖口和领口绣有寓意吉祥的图案，供摆手舞祭祀庆典穿着。",
+    "position_x": 0.1256,
+    "position_y": -0.307,
+    "position_z": 0.0204,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "黎族筒裙",
+    "title": "大力神纹",
+    "content": "大力神纹是黎族最古老的图腾，以通经断纬技法织入裙身。",
+    "position_x": 0.0,
+    "position_y": 0.1223,
+    "position_z": 0.1345,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "黎族筒裙",
+    "title": "人形纹饰",
+    "content": "人形纹记录着黎族祖先的故事，一条筒裙就是一部无字的史书。",
+    "position_x": 0.0,
+    "position_y": -0.1528,
+    "position_z": 0.1314,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "黎族筒裙",
+    "title": "踞腰织机",
+    "content": "以原始踞腰织机织造，一条筒裙往往需要数月甚至数年才能完成。",
+    "position_x": 0.0,
+    "position_y": -0.4585,
+    "position_z": 0.1279,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "赫哲族鱼皮衣",
+    "title": "鱼鳞纹理",
+    "content": "大马哈鱼皮保留天然鱼鳞纹理，轻便防水，独具渔猎民族匠心。",
+    "position_x": 0.0,
+    "position_y": 0.2375,
+    "position_z": 0.0675,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "赫哲族鱼皮衣",
+    "title": "鞣制工艺",
+    "content": "鱼皮经鞣制、拼接、缝制而成，是濒临失传的人类非物质文化遗产。",
+    "position_x": 0.0,
+    "position_y": -0.0864,
+    "position_z": 0.0845,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "赫哲族鱼皮衣",
+    "title": "云纹贴花",
+    "content": "云纹与水波纹贴花装饰，体现赫哲族与江河共生共存的深厚情感。",
+    "position_x": 0.0,
+    "position_y": -0.4535,
+    "position_z": 0.0754,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "朝鲜族短袄裙",
+    "title": "蝴蝶结带",
+    "content": "胸前蝴蝶结系带是朝鲜族服饰的经典细节，温婉秀美。",
+    "position_x": 0.0,
+    "position_y": 0.214,
+    "position_z": 0.1147,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "朝鲜族短袄裙",
+    "title": "短袄形制",
+    "content": "短袄「则高利」紧身合体，线条流畅，尽显端庄优雅气质。",
+    "position_x": 0.0,
+    "position_y": -0.0778,
+    "position_z": 0.2087,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "朝鲜族短袄裙",
+    "title": "高腰长裙",
+    "content": "长裙「契玛」高腰飘逸，色彩明快，体现朝鲜族崇尚自然的美学。",
+    "position_x": 0.0,
+    "position_y": -0.4085,
+    "position_z": 0.3207,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "满族旗袍",
+    "title": "多层滚边",
+    "content": "领口、袖口和衣襟镶有多层滚边，一针一线皆是满族服饰工艺的精华。",
+    "position_x": 0.0,
+    "position_y": 0.2131,
+    "position_z": 0.0485,
+    "sort_order": 0
+  },
+  {
+    "garment_name": "满族旗袍",
+    "title": "海水江崖纹",
+    "content": "下摆海水江崖纹寓意山河永固，承载满族骑射服饰演变的历史。",
+    "position_x": 0.0,
+    "position_y": -0.0775,
+    "position_z": 0.053,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "满族旗袍",
+    "title": "直筒形制",
+    "content": "保留宽大直筒的原始形态，与后来的海派旗袍风格迥异。",
+    "position_x": 0.1041,
+    "position_y": -0.4069,
+    "position_z": 0.0511,
+    "sort_order": 2
+  },
+  {
+    "garment_name": "高山族贝珠衣",
+    "title": "几何条纹",
+    "content": "贝珠排列成精美的几何条纹与人形纹，象征财富与地位。",
+    "position_x": 0.0,
+    "position_y": -0.0663,
+    "position_z": 0.0103,
+    "sort_order": 1
+  },
+  {
+    "garment_name": "高山族贝珠衣",
+    "title": "礼服形制",
+    "content": "贝珠衣是高山族献给最尊贵客人的礼物，是工艺与审美的极致体现。",
+    "position_x": 0.1124,
+    "position_y": -0.3481,
+    "position_z": 0.0222,
+    "sort_order": 2
+  }
+]

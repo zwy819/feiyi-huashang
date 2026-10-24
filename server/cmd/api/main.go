@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -449,9 +450,13 @@ func seedData(
 	log.Println("[Seed] 种子数据插入完成")
 }
 
-// seedAnnotations 为 3 件带模型的示例服饰插入演示热点标注
-// 坐标由 tools/seed_hotspots.js 对 GLB 表面射线求交得出（模型居中后、朝向初始镜头 +Z）
+// seedAnnotations 优先读取 server/seed/annotations.json（40 件馆藏、119 个热点），
+// 文件缺失时退回 3 件示例服饰的演示热点。
 func seedAnnotations(db *sql.DB) {
+	if seedAnnotationsFromFile(db) {
+		return
+	}
+
 	type demoPoint struct {
 		Garment string
 		Title   string
@@ -499,4 +504,55 @@ func seedAnnotations(db *sql.DB) {
 			log.Printf("[Seed] 热点标注 '%s - %s' 插入成功", d.Garment, d.Title)
 		}
 	}
+}
+
+type seedAnnotation struct {
+	GarmentName string  `json:"garment_name"`
+	Title       string  `json:"title"`
+	Content     string  `json:"content"`
+	PositionX   float64 `json:"position_x"`
+	PositionY   float64 `json:"position_y"`
+	PositionZ   float64 `json:"position_z"`
+	SortOrder   int     `json:"sort_order"`
+}
+
+func seedAnnotationsFromFile(db *sql.DB) bool {
+	paths := []string{
+		filepath.Join("seed", "annotations.json"),
+		filepath.Join("server", "seed", "annotations.json"),
+	}
+	var raw []byte
+	var err error
+	for _, path := range paths {
+		raw, err = os.ReadFile(path)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return false
+	}
+	var annotations []seedAnnotation
+	if err := json.Unmarshal(raw, &annotations); err != nil {
+		log.Printf("[Seed] 读取 annotations.json 失败: %v", err)
+		return false
+	}
+	inserted := 0
+	for _, a := range annotations {
+		var garmentID int64
+		if err := db.QueryRow(`SELECT id FROM garments WHERE name = ? LIMIT 1`, a.GarmentName).Scan(&garmentID); err != nil {
+			continue
+		}
+		if _, err := db.Exec(
+			`INSERT INTO annotations (garment_id, title, content, position_x, position_y, position_z, sort_order)
+			 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			garmentID, a.Title, a.Content, a.PositionX, a.PositionY, a.PositionZ, a.SortOrder,
+		); err != nil {
+			log.Printf("[Seed] 热点标注 '%s - %s' 插入失败: %v", a.GarmentName, a.Title, err)
+			continue
+		}
+		inserted++
+	}
+	log.Printf("[Seed] 已从 seed/annotations.json 插入 %d/%d 个热点标注", inserted, len(annotations))
+	return inserted > 0
 }

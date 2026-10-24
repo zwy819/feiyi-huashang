@@ -56,7 +56,17 @@ pnpm run dev
 
 打开 `http://localhost:5173/`。Vite 会把 `/api` 代理到 `http://localhost:3001`。
 
-### 3. 配置 AI
+### 3. 获取 3D 模型（可选，但推荐）
+
+模型约 230 MB，不在 Git 历史中。在仓库根目录执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\fetch-models.ps1
+```
+
+脚本从 GitHub Release 下载并校验 41 个 GLB。没有模型时，浏览、统计、AI 和报告仍可用，只是 3D 视口显示占位。详见 [docs/ASSETS.md](docs/ASSETS.md)。
+
+### 4. 配置 AI
 
 在 `server/.env` 中填写（该文件已被 `.gitignore` 忽略）：
 
