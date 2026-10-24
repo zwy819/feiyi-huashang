@@ -24,6 +24,38 @@
               查看地理分布
             </router-link>
           </div>
+
+          <!-- AI 导览提问框 -->
+          <form class="mt-9 max-w-2xl mx-auto" @submit.prevent="askAi">
+            <div class="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1.5 pl-4 backdrop-blur-sm focus-within:border-mogao-gold-400">
+              <span class="font-serif text-mogao-gold-300">织</span>
+              <input
+                v-model="aiQuestion"
+                maxlength="200"
+                class="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-mogao-leadwhite-300/70 focus:outline-none"
+                placeholder="问织语：想找一件适合秋天婚礼的刺绣服饰…"
+                aria-label="向织语提问"
+              />
+              <button
+                type="submit"
+                class="shrink-0 rounded-full bg-mogao-gold px-4 py-2 text-xs font-semibold text-mogao-lapis-900 hover:bg-mogao-gold-400 disabled:opacity-50"
+                :disabled="!aiQuestion.trim()"
+              >
+                问织语
+              </button>
+            </div>
+            <div class="mt-3 flex flex-wrap justify-center gap-2">
+              <button
+                v-for="example in aiExamples"
+                :key="example"
+                type="button"
+                class="rounded-full border border-white/15 px-3 py-1.5 text-[11px] text-mogao-leadwhite-200 hover:border-mogao-gold-400 hover:text-white transition-colors"
+                @click="askExample(example)"
+              >
+                {{ example }}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </section>
@@ -140,6 +172,7 @@ import { ref, computed, onMounted, type Ref } from 'vue'
 import { garmentAPI } from '@/services/api'
 import ModelViewer from '@/components/3D/ModelViewer.vue'
 import UserContributions from '@/components/UserContributions/UserContributions.vue'
+import { useAiChat } from '@/composables/useAiChat'
 import { formatDate } from '@/utils'
 import type { Garment } from '@/types/garment'
 import type { ApiResponse } from '@/types/api'
@@ -154,6 +187,26 @@ interface ExploreModule {
 
 const dailyGarment: Ref<Garment | null> = ref(null)
 const loading: Ref<boolean> = ref(true)
+const aiQuestion: Ref<string> = ref('')
+const ai = useAiChat()
+const aiExamples: string[] = [
+  '秋天婚礼，想要刺绣元素',
+  '苗族百褶裙为什么有这么多褶？',
+  '哪个省的馆藏最多？',
+]
+
+function askAi(): void {
+  const question = aiQuestion.value.trim()
+  if (!question) return
+  aiQuestion.value = ''
+  ai.open({ page: 'home' })
+  void ai.ask(question)
+}
+
+function askExample(example: string): void {
+  aiQuestion.value = example
+  askAi()
+}
 
 const modelPath = computed(() => {
   if (!dailyGarment.value) return ''

@@ -31,6 +31,15 @@
             {{ item.label }}
           </router-link>
 
+          <!-- AI 导览入口 -->
+          <button
+            class="ml-1 inline-flex items-center gap-1.5 px-3 py-2 rounded-mogao text-sm font-medium text-mogao-cinnabar bg-mogao-cinnabar-50 hover:bg-mogao-cinnabar-100 transition-colors"
+            @click="ai.open()"
+          >
+            <span class="font-serif">织</span>
+            AI 导览
+          </button>
+
           <!-- 管理入口（仅管理员可见） -->
           <router-link
             v-if="isAdmin"
@@ -98,6 +107,14 @@
             {{ item.label }}
           </router-link>
 
+          <button
+            class="mt-2 w-full flex items-center gap-2 px-4 py-2.5 rounded-mogao text-sm font-medium text-mogao-cinnabar bg-mogao-cinnabar-50"
+            @click="mobileOpen = false; ai.open()"
+          >
+            <span class="font-serif">织</span>
+            AI 导览
+          </button>
+
           <!-- 移动端用户区域 -->
           <div class="border-t border-mogao-ochre-200 pt-2 mt-2">
             <div class="flex items-center justify-between px-4 py-2">
@@ -131,6 +148,7 @@
 import { ref, computed, type Ref } from 'vue'
 import { useRouter, type Router } from 'vue-router'
 import { useAuth } from '@/composables'
+import { useAiChat } from '@/composables/useAiChat'
 import type { User } from '@/types/user'
 
 interface NavItem {
@@ -156,6 +174,7 @@ const isAdmin = computed(() => {
 
 const mobileOpen: Ref<boolean> = ref(false)
 const { user, logout } = useAuth()
+const ai = useAiChat()
 const router: Router = useRouter()
 
 function handleLogout(): void {

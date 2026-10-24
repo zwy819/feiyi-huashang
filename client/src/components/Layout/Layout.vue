@@ -6,6 +6,7 @@
     </main>
     <Footer />
     <ToastContainer />
+    <AiDock />
   </div>
 </template>
 
@@ -13,4 +14,5 @@
 import Navbar from './Navbar.vue'
 import Footer from './Footer.vue'
 import ToastContainer from '@/components/Common/Toast.vue'
+import AiDock from '@/components/AI/AiDock.vue'
 </script>
