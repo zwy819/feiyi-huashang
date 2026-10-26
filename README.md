@@ -267,3 +267,5 @@ go run ./cmd/api -ingest
 ## 比赛信息
 
 第九届传智杯 AI WEB 网页开发挑战赛作品。详细改进计划见 [docs/传智杯-AI-WEB-改进计划.md](docs/传智杯-AI-WEB-改进计划.md)。
+
+- 技术文档 PDF：[在线预览](https://cdn.jsdelivr.net/gh/zwy819/feiyi-huashang@master/docs/%E9%9D%9E%E9%81%97%E5%8D%8E%E8%A3%B3-%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3.pdf) · [仓库源文件](docs/非遗华裳-技术文档.pdf)
