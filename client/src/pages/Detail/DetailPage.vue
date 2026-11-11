@@ -30,12 +30,27 @@
             :auto-rotate="true"
             :height="480"
             :annotations="annotations"
+            :tour-mode="tourActive"
+            :show-background-picker="!tourActive"
             @hotspot-click="onHotspotClick"
+            @model-ready="modelReady = true"
           />
+
+          <!-- 3D 导览入口 -->
+          <button
+            v-if="modelReady && annotations.length > 0 && !tourActive"
+            @click="startTour"
+            class="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs text-white transition-all duration-300 hover:scale-105"
+            style="background: rgba(60, 50, 40, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.14);"
+            aria-label="开始 3D 导览"
+          >
+            <span class="text-mogao-gold">▶</span>
+            3D 导览
+          </button>
 
           <!-- 生成分享图 -->
           <button
-            v-if="garment"
+            v-if="garment && !tourActive"
             @click="openShare"
             class="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs text-white transition-all duration-300 hover:scale-105"
             style="background: rgba(60, 50, 40, 0.45); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);"
@@ -63,6 +78,62 @@
               <p class="text-xs text-mogao-lapis-600 leading-relaxed mt-2">
                 {{ activeAnnotation.content }}
               </p>
+            </div>
+          </Transition>
+
+          <!-- 3D 导览控制条 -->
+          <Transition name="tour-fade">
+            <div
+              v-if="tourActive && activeAnnotation"
+              class="absolute inset-x-3 bottom-3 z-40 rounded-xl px-3 py-3 text-white shadow-2xl"
+              style="background: rgba(36, 31, 27, 0.9); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12);"
+              aria-live="polite"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex min-w-0 items-center gap-2.5">
+                  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-mogao-cinnabar text-xs font-semibold">
+                    {{ tourIndex + 1 }}
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-[10px] tracking-[0.2em] text-white/45">3D 导览 · {{ tourIndex + 1 }}/{{ tourSteps.length }}</p>
+                    <p class="truncate text-sm font-medium">{{ activeAnnotation.title }}</p>
+                  </div>
+                </div>
+                <div class="flex shrink-0 items-center gap-1">
+                  <button
+                    @click="prevTourStep"
+                    :disabled="tourIndex === 0"
+                    class="rounded-full px-2.5 py-1.5 text-[11px] text-white/75 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    上一站
+                  </button>
+                  <button
+                    @click="nextTourStep"
+                    class="rounded-full bg-mogao-gold px-2.5 py-1.5 text-[11px] font-medium text-mogao-lapis-900 transition-opacity hover:opacity-90"
+                  >
+                    {{ isLastTourStep ? '完成' : '下一站' }}
+                  </button>
+                  <button
+                    @click="openAi"
+                    class="hidden rounded-full px-2.5 py-1.5 text-[11px] text-white/75 transition-colors hover:bg-white/10 sm:inline-flex"
+                  >
+                    问织语
+                  </button>
+                  <button
+                    @click="exitTour"
+                    class="flex h-7 w-7 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                    aria-label="退出 3D 导览"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <div class="mt-2 h-0.5 overflow-hidden rounded-full bg-white/15">
+                <div
+                  class="h-full rounded-full bg-mogao-gold transition-all duration-500"
+                  :style="{ width: `${((tourIndex + 1) / tourSteps.length) * 100}%` }"
+                />
+              </div>
             </div>
           </Transition>
 
@@ -191,6 +262,13 @@ const isFavored: Ref<boolean> = ref(false)
 const annotations: Ref<Annotation[]> = ref([])
 const activeAnnotation: Ref<Annotation | null> = ref(null)
 
+// 3D 导览
+const modelReady: Ref<boolean> = ref(false)
+const tourActive: Ref<boolean> = ref(false)
+const tourIndex: Ref<number> = ref(0)
+const tourSteps: Ref<Annotation[]> = ref([])
+const isLastTourStep = computed(() => tourSteps.value.length > 0 && tourIndex.value >= tourSteps.value.length - 1)
+
 // 分享卡片
 const viewerRef = ref<InstanceType<typeof ModelViewer> | null>(null)
 const shareOpen: Ref<boolean> = ref(false)
@@ -203,6 +281,62 @@ function openShare(): void {
 
 function onHotspotClick(annotation: Annotation): void {
   activeAnnotation.value = annotation
+  if (tourActive.value) {
+    const index = tourSteps.value.findIndex((step) => step.id === annotation.id)
+    if (index >= 0) tourIndex.value = index
+  }
+}
+
+function pickTourSteps(list: Annotation[]): Annotation[] {
+  const sorted = [...list].sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
+  if (sorted.length <= 3) return sorted
+  return [sorted[0], sorted[Math.floor(sorted.length / 2)], sorted[sorted.length - 1]]
+}
+
+function goToTourStep(index: number): void {
+  const step = tourSteps.value[index]
+  if (!step || !modelReady.value) return
+  tourIndex.value = index
+  activeAnnotation.value = step
+  void nextTick(() => {
+    viewerRef.value?.focusAnnotation?.(step.id)
+  })
+}
+
+function startTour(): void {
+  if (!modelReady.value || annotations.value.length === 0 || tourActive.value) return
+  tourSteps.value = pickTourSteps(annotations.value)
+  tourIndex.value = 0
+  tourActive.value = true
+  activeAnnotation.value = null
+  viewerRef.value?.setAutoRotate?.(false)
+  void nextTick(() => goToTourStep(0))
+}
+
+function prevTourStep(): void {
+  if (tourIndex.value > 0) goToTourStep(tourIndex.value - 1)
+}
+
+function nextTourStep(): void {
+  if (isLastTourStep.value) {
+    exitTour()
+    return
+  }
+  goToTourStep(tourIndex.value + 1)
+}
+
+function stopTour(resetCamera = true): void {
+  tourActive.value = false
+  tourSteps.value = []
+  tourIndex.value = 0
+  activeAnnotation.value = null
+  if (resetCamera) {
+    viewerRef.value?.resetView?.(true)
+  }
+}
+
+function exitTour(): void {
+  stopTour(true)
 }
 
 function openAi(): void {
@@ -217,6 +351,7 @@ function openAi(): void {
 function focusAnnotationID(id: number): void {
   const annotation = annotations.value.find((item) => item.id === id)
   if (!annotation) return
+  if (tourActive.value) stopTour(false)
   activeAnnotation.value = annotation
   void nextTick(() => {
     viewerRef.value?.focusAnnotation?.(id)
@@ -260,8 +395,21 @@ const modelPath = computed(() => {
   return ''
 })
 
+watch(modelPath, () => {
+  modelReady.value = false
+  if (tourActive.value) stopTour(false)
+})
+
+watch(
+  () => route.params.id,
+  () => {
+    if (tourActive.value) stopTour(false)
+  },
+)
+
 async function loadDetail(id: string | number): Promise<void> {
   loading.value = true
+  if (tourActive.value) stopTour(false)
   annotations.value = []
   activeAnnotation.value = null
 
@@ -366,5 +514,15 @@ async function toggleFavorite(): Promise<void> {
 .annotation-fade-leave-to {
   opacity: 0;
   transform: translateY(-6px);
+}
+
+.tour-fade-enter-active,
+.tour-fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.tour-fade-enter-from,
+.tour-fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 </style>
