@@ -333,6 +333,8 @@ function startCameraFlight(
   if (!camera || !controls) return
 
   if (prefersReducedMotion() || duration <= 0) {
+    cameraFlight = null
+    controls.enabled = true
     camera.position.copy(endPosition)
     controls.target.copy(endTarget)
     controls.autoRotate = autoRotateAfter
