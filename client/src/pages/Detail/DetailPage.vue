@@ -40,8 +40,8 @@
           <button
             v-if="modelReady && annotations.length > 0 && !tourActive"
             @click="startTour"
-            class="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs text-white transition-all duration-300 hover:scale-105"
-            style="background: rgba(60, 50, 40, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.14);"
+            class="absolute top-3 left-3 z-20 flex items-center gap-1.5 rounded-full bg-mogao-cinnabar/95 px-3 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:scale-105"
+            style="backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18);"
             aria-label="开始 3D 导览"
           >
             <span class="text-mogao-gold">▶</span>
