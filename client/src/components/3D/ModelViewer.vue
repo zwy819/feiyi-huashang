@@ -76,9 +76,9 @@
       >{{ i + 1 }}</button>
     </div>
 
-    <!-- 讲解点开关（放置模式下预览点常显，无需开关） -->
+    <!-- 讲解点开关（放置模式下预览点常显，无需开关；导览模式下隐藏底部控件） -->
     <div
-      v-if="!placementMode && annotations.length > 0 && modelPath && !loadError && !webglLost"
+      v-if="!placementMode && !tourMode && annotations.length > 0 && modelPath && !loadError && !webglLost"
       class="absolute bottom-3 left-3 z-20"
     >
       <button
@@ -92,9 +92,9 @@
       </button>
     </div>
 
-    <!-- 背景选择器 -->
+    <!-- 背景选择器（导览模式下隐藏，避免和导览控制条重叠） -->
     <div
-      v-if="showBackgroundPicker && modelPath && !loadError && !webglLost"
+      v-if="showBackgroundPicker && !tourMode && modelPath && !loadError && !webglLost"
       class="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300"
       style="background: rgba(60, 50, 40, 0.45); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);"
     >
@@ -132,6 +132,8 @@ interface Props {
   annotations?: Annotation[]
   /** 放置模式：单击模型表面时触发 surface-click（管理后台选点用） */
   placementMode?: boolean
+  /** 导览模式：隐藏底部热点/背景控件，把注意力留给外部导览控制条 */
+  tourMode?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -142,11 +144,13 @@ const props = withDefaults(defineProps<Props>(), {
   showBackgroundPicker: true,
   annotations: () => [],
   placementMode: false,
+  tourMode: false,
 })
 
 const emit = defineEmits<{
   (e: 'hotspot-click', annotation: Annotation): void
   (e: 'surface-click', position: { x: number; y: number; z: number }): void
+  (e: 'model-ready'): void
 }>()
 
 interface HTMLElementWithCleanup extends HTMLCanvasElement {
@@ -293,6 +297,79 @@ let hemiLight: THREE.HemisphereLight | null = null
 let bgTexture: THREE.Texture | THREE.CanvasTexture | null = null
 let resizeObserver: ResizeObserver | null = null
 
+// 模型空间信息 / 镜头导览状态
+const modelCenter = new THREE.Vector3()
+const modelSize = new THREE.Vector3()
+const initialCameraPosition = new THREE.Vector3(0, 1.5, 4)
+const initialTarget = new THREE.Vector3(0, 0, 0)
+
+interface CameraFlight {
+  startPosition: THREE.Vector3
+  endPosition: THREE.Vector3
+  startTarget: THREE.Vector3
+  endTarget: THREE.Vector3
+  startedAt: number
+  duration: number
+  autoRotateAfter: boolean
+}
+
+let cameraFlight: CameraFlight | null = null
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+}
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
+
+function startCameraFlight(
+  endPosition: THREE.Vector3,
+  endTarget: THREE.Vector3,
+  duration = 760,
+  autoRotateAfter = false,
+): void {
+  if (!camera || !controls) return
+
+  if (prefersReducedMotion() || duration <= 0) {
+    camera.position.copy(endPosition)
+    controls.target.copy(endTarget)
+    controls.autoRotate = autoRotateAfter
+    controls.update()
+    return
+  }
+
+  controls.autoRotate = false
+  controls.enabled = false
+  cameraFlight = {
+    startPosition: camera.position.clone(),
+    endPosition: endPosition.clone(),
+    startTarget: controls.target.clone(),
+    endTarget: endTarget.clone(),
+    startedAt: performance.now(),
+    duration,
+    autoRotateAfter,
+  }
+}
+
+function updateCameraFlight(now: number): void {
+  if (!cameraFlight || !camera || !controls) return
+
+  const progress = Math.min((now - cameraFlight.startedAt) / cameraFlight.duration, 1)
+  const eased = easeInOutCubic(progress)
+  camera.position.lerpVectors(cameraFlight.startPosition, cameraFlight.endPosition, eased)
+  controls.target.lerpVectors(cameraFlight.startTarget, cameraFlight.endTarget, eased)
+
+  if (progress >= 1) {
+    const autoRotateAfter = cameraFlight.autoRotateAfter
+    cameraFlight = null
+    controls.enabled = true
+    controls.autoRotate = autoRotateAfter
+    controls.update()
+  }
+}
+
 function initScene(): void {
   if (!containerRef.value) return
 
@@ -371,7 +448,7 @@ function initScene(): void {
   controls.enableRotate = true
   controls.autoRotate = props.autoRotate
   controls.autoRotateSpeed = 1.5
-  controls.minDistance = 2
+  controls.minDistance = 1.2
   controls.maxDistance = 8
   controls.maxPolarAngle = Math.PI / 1.5
   controls.update()
@@ -450,6 +527,7 @@ function initScene(): void {
   // Animation loop
   function animate(): void {
     animationId = requestAnimationFrame(animate)
+    updateCameraFlight(performance.now())
     if (controls) controls.update()
     updateHotspots()
     if (renderer && scene && camera) {
@@ -485,10 +563,26 @@ function loadModelIntoScene(url: string): void {
       currentModel = modelScene
       scene.add(modelScene)
 
-      // 模型已居中于原点，更新旋转中心和地面阴影位置
+      // 模型已居中于原点，更新旋转中心、默认镜头和地面阴影位置
       const box = new THREE.Box3().setFromObject(modelScene)
-      const modelCenter = box.getCenter(new THREE.Vector3())
-      const modelSize = box.getSize(new THREE.Vector3())
+      box.getCenter(modelCenter)
+      box.getSize(modelSize)
+
+      if (camera) {
+        // 按模型尺寸自动取景，避免 3D 卡片里模型只占中间一小块
+        const fov = THREE.MathUtils.degToRad(camera.fov)
+        const aspect = camera.aspect || 1
+        const fitHeight = modelSize.y / (2 * Math.tan(fov / 2))
+        const fitWidth = modelSize.x / (2 * Math.tan(fov / 2) * aspect)
+        const distance = Math.max(2.2, Math.max(fitHeight, fitWidth) * 1.25)
+        camera.position.set(
+          modelCenter.x,
+          modelCenter.y + modelSize.y * 0.08,
+          modelCenter.z + distance,
+        )
+        initialCameraPosition.copy(camera.position)
+      }
+      initialTarget.copy(modelCenter)
 
       if (controls) {
         controls.target.copy(modelCenter)
@@ -501,6 +595,7 @@ function loadModelIntoScene(url: string): void {
       }
 
       loading.value = false
+      emit('model-ready')
     },
     // onProgress (not used for now)
     undefined,
@@ -697,17 +792,52 @@ function capture(): string | null {
   }
 }
 
-/** 聚焦指定热点（AI 导览返回 action 时调用），返回是否找到该标注 */
-function focusAnnotation(id: number): boolean {
+/** 聚焦指定热点（AI 导览/3D 导览调用），并把镜头平滑飞到热点附近 */
+function focusAnnotation(id: number, animateCamera = true): boolean {
   const annotation = props.annotations.find((item) => item.id === id)
   if (!annotation) return false
   showAnnotations.value = true
   activeAnnotationId.value = id
   emit('hotspot-click', annotation)
+
+  if (animateCamera && camera && controls) {
+    const target = new THREE.Vector3(annotation.position_x, annotation.position_y, annotation.position_z)
+    // 稍微把视觉中心拉回模型中心，避免只盯着裙摆导致衣服上半部分被裁掉
+    const focusTarget = target.clone().lerp(modelCenter, 0.45)
+    const direction = target.clone().sub(modelCenter)
+    if (direction.lengthSq() < 0.0001) {
+      direction.copy(camera.position).sub(controls.target)
+    }
+    direction.y = THREE.MathUtils.clamp(direction.y, 0.12, 0.65)
+    if (direction.lengthSq() < 0.0001) direction.set(0, 0.2, 1)
+    direction.normalize()
+
+    const maxDimension = Math.max(modelSize.x, modelSize.y, modelSize.z, 1)
+    const distance = THREE.MathUtils.clamp(maxDimension * 1.5, 1.9, 4.8)
+    const endPosition = focusTarget.clone().add(direction.multiplyScalar(distance))
+    endPosition.y = Math.max(endPosition.y, focusTarget.y + 0.25)
+    startCameraFlight(endPosition, focusTarget, 780, false)
+  }
+
   return true
 }
 
-defineExpose({ capture, focusAnnotation })
+/** 退出导览：镜头回到进入详情页时的初始视角 */
+function resetView(enableAutoRotate = true): boolean {
+  if (!camera || !controls) return false
+  startCameraFlight(initialCameraPosition, initialTarget, 760, enableAutoRotate)
+  return true
+}
+
+function setAutoRotate(enabled: boolean): void {
+  if (controls) controls.autoRotate = enabled
+}
+
+function isReady(): boolean {
+  return !!currentModel && !!camera && !!controls
+}
+
+defineExpose({ capture, focusAnnotation, resetView, setAutoRotate, isReady })
 </script>
 
 <style scoped>
