@@ -149,6 +149,7 @@ func SetupRouter(
 		{
 			aiGroup.GET("/status", aiHandler.Status)
 			aiGroup.POST("/chat", aiHandler.Chat)
+			aiGroup.POST("/vision-search", aiHandler.VisionSearch)
 			aiGroup.POST("/feedback", aiHandler.Feedback)
 		}
 

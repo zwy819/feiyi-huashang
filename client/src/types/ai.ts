@@ -45,6 +45,35 @@ export interface AiCameraState {
   fov: number
 }
 
+export interface AiVisionAttributes {
+  ethnic: string
+  craft: string
+  pattern: string
+  dynasty: string
+  keywords: string[]
+  confidence: number
+  description: string
+}
+
+export interface AiVisionCandidate {
+  garment_id: number
+  name: string
+  dynasty: string
+  ethnic: string
+  craft: string
+  province: string
+  model_id?: number
+  score: number
+  reason: string
+}
+
+export interface AiVisionResult {
+  attributes: AiVisionAttributes
+  candidates: AiVisionCandidate[]
+  model: string
+  latency_ms: number
+}
+
 export interface AiChatContext {
   page?: string
   garment_id?: number

@@ -202,6 +202,59 @@ func (p *OpenAIProvider) Embed(ctx context.Context, texts []string) ([][]float32
 	return out, nil
 }
 
+func (p *OpenAIProvider) VisionJSON(
+	ctx context.Context,
+	modelName string,
+	imageDataURL string,
+	prompt string,
+) (string, error) {
+	payload := map[string]any{
+		"model": modelName,
+		"messages": []any{map[string]any{
+			"role": "user",
+			"content": []any{
+				map[string]any{"type": "text", "text": prompt},
+				map[string]any{"type": "image_url", "image_url": map[string]any{"url": imageDataURL}},
+			},
+		}},
+		"temperature": 0.1,
+		"max_tokens":  500,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, p.baseURL+"/chat/completions", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+p.apiKey)
+
+	resp, err := p.httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", providerHTTPError(resp)
+	}
+	var result struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 4*1024*1024)).Decode(&result); err != nil {
+		return "", err
+	}
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("vision response missing choices")
+	}
+	return result.Choices[0].Message.Content, nil
+}
+
 func providerHTTPError(resp *http.Response) error {
 	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	msg := strings.TrimSpace(string(raw))

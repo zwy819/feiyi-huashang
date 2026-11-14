@@ -56,6 +56,35 @@ func (h *AIHandler) Reindex(c *gin.Context) {
 	c.JSON(http.StatusOK, model.Response{Code: 0, Data: stats})
 }
 
+type visionSearchRequest struct {
+	Image string `json:"image"`
+}
+
+// VisionSearch 接收拍照识衣的 data URL，返回视觉属性与 Top5 馆藏候选。
+func (h *AIHandler) VisionSearch(c *gin.Context) {
+	if !h.service.Available() {
+		c.JSON(http.StatusServiceUnavailable, model.ErrorResponse(50301, "AI 导览暂未配置"))
+		return
+	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 12*1024*1024)
+	var req visionSearchRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.Image == "" {
+		c.JSON(http.StatusBadRequest, model.ErrorResponse(40001, "请求格式不正确"))
+		return
+	}
+	result, err := h.service.VisualSearch(c.Request.Context(), c.ClientIP(), req.Image)
+	if err != nil {
+		if chatErr, ok := err.(*ai.ChatError); ok {
+			c.JSON(http.StatusBadRequest, model.ErrorResponse(chatErr.Code, chatErr.Message))
+			return
+		}
+		log.Printf("[AI][Vision] 识别失败: %v", err)
+		c.JSON(http.StatusBadGateway, model.ErrorResponse(50202, "图片识别失败，请换一张清晰照片"))
+		return
+	}
+	c.JSON(http.StatusOK, model.Response{Code: 0, Data: result})
+}
+
 // Chat streams server-sent events. Header is written only after the request has
 // passed the availability check; all later failures are delivered as an SSE
 // `error` event so the browser can keep the partial answer and offer a retry.

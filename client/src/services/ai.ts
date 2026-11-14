@@ -5,6 +5,7 @@ import type {
   AiSource,
   AiStatus,
   AiToolEvent,
+  AiVisionResult,
 } from '@/types/ai'
 
 export class AiRequestError extends Error {
@@ -91,6 +92,17 @@ export const aiAPI = {
       body: JSON.stringify({ message_id: messageID, rating, reason }),
     })
     if (!response.ok) throw await parseError(response)
+  },
+
+  async visionSearch(image: string): Promise<AiVisionResult> {
+    const response = await fetch('/api/ai/vision-search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image }),
+    })
+    if (!response.ok) throw await parseError(response)
+    const payload = await response.json()
+    return payload.data as AiVisionResult
   },
 }
 

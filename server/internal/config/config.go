@@ -61,7 +61,7 @@ func Load() *Config {
 		AIBaseURL:          strings.TrimRight(getEnv("AI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"), "/"),
 		AIAPIKey:           strings.TrimSpace(getEnv("AI_API_KEY", "")),
 		AIChatModel:        getEnv("AI_CHAT_MODEL", "qwen-plus"),
-		AIVisionModel:      getEnv("AI_VISION_MODEL", "qwen-vl-max"),
+		AIVisionModel:      getEnv("AI_VISION_MODEL", "qwen3-vl-plus"),
 		AIEmbeddingModel:   getEnv("AI_EMBEDDING_MODEL", "text-embedding-v3"),
 		AIEmbeddingDim:     getEnvInt("AI_EMBEDDING_DIM", 1024),
 		AIDailyTokenBudget: getEnvInt64("AI_DAILY_TOKEN_BUDGET", 2000000),
