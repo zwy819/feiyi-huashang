@@ -68,7 +68,10 @@
         v-for="(spot, i) in visibleHotspots"
         :key="spot.annotation.id"
         class="hotspot-dot"
-        :class="{ 'hotspot-dot--active': activeAnnotationId === spot.annotation.id }"
+        :class="{
+          'hotspot-dot--active': activeAnnotationId === spot.annotation.id,
+          'hotspot-dot--dim': activeAnnotationId !== null && activeAnnotationId !== spot.annotation.id,
+        }"
         :style="{ left: `${spot.x}px`, top: `${spot.y}px`, opacity: spot.visible ? undefined : 0.3 }"
         :title="spot.annotation.title"
         :aria-label="`讲解点：${spot.annotation.title}`"
@@ -869,6 +872,19 @@ defineExpose({ capture, focusAnnotation, resetView, setAutoRotate, isReady })
 }
 .hotspot-dot--active {
   background: #8a6a2f;
-  box-shadow: 0 0 0 6px rgba(138, 106, 47, 0.32);
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow: 0 0 0 6px rgba(138, 106, 47, 0.32), 0 0 0 12px rgba(138, 106, 47, 0.12);
+  animation: hotspot-pulse 2.2s ease-in-out infinite;
+}
+.hotspot-dot--dim {
+  opacity: 0.25;
+  transform: translate(-50%, -50%) scale(0.86);
+}
+@keyframes hotspot-pulse {
+  0%, 100% { box-shadow: 0 0 0 6px rgba(138, 106, 47, 0.32), 0 0 0 12px rgba(138, 106, 47, 0.08); }
+  50% { box-shadow: 0 0 0 8px rgba(138, 106, 47, 0.38), 0 0 0 18px rgba(138, 106, 47, 0.14); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hotspot-dot--active { animation: none; }
 }
 </style>
