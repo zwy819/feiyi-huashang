@@ -842,7 +842,21 @@ function isReady(): boolean {
   return !!currentModel && !!camera && !!controls
 }
 
-defineExpose({ capture, focusAnnotation, resetView, setAutoRotate, isReady })
+/** 供“边看边问”把当前镜头位姿作为空间上下文提交给 AI。 */
+function getCameraState(): {
+  position: [number, number, number]
+  target: [number, number, number]
+  fov: number
+} | null {
+  if (!camera || !controls) return null
+  return {
+    position: [camera.position.x, camera.position.y, camera.position.z],
+    target: [controls.target.x, controls.target.y, controls.target.z],
+    fov: camera.fov,
+  }
+}
+
+defineExpose({ capture, focusAnnotation, resetView, setAutoRotate, isReady, getCameraState })
 </script>
 
 <style scoped>

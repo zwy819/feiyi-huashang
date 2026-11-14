@@ -177,6 +177,8 @@ const statusDotClass = computed(() => {
   return status.value.configured ? 'bg-mogao-malachite-400' : 'bg-mogao-cinnabar-400'
 })
 const contextLabel = computed(() => {
+  if (context.value.annotation_id) return '当前 3D 热点上下文'
+  if (context.value.camera) return '3D 空间上下文'
   if (context.value.page === 'detail') return '当前服饰上下文'
   if (context.value.page === 'statistics') return '馆藏统计上下文'
   return '全馆导览'

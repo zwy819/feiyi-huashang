@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -209,6 +210,20 @@ func (s *Service) chat(ctx context.Context, req ChatRequest, message, conversati
 		if a, err := s.toolbox.annotationStore.GetByID(req.Context.AnnotationID); err == nil {
 			if contextGarment == nil || a.GarmentID == contextGarment.ID {
 				contextAnnotation = a
+			}
+		}
+	}
+	// Spatial grounding: if the client only sends the camera pose, resolve the
+	// nearest hotspot and treat it as the current "here" context.
+	if contextAnnotation == nil && contextGarment != nil && req.Context.Camera != nil {
+		toolStart := time.Now()
+		if annotations, err := s.toolbox.GetAnnotations(ctx, contextGarment.ID); err == nil {
+			contextAnnotation = nearestAnnotation(annotations, req.Context.Camera.Target)
+			if contextAnnotation != nil {
+				toolCalls++
+				if err := s.emitTool(emit, "resolve_spatial_context", "按相机目标点匹配到当前 3D 热点", toolStart); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -648,6 +663,29 @@ func dimensionLabel(dim string) string {
 	default:
 		return dim
 	}
+}
+
+func nearestAnnotation(annotations []model.Annotation, target [3]float64) *model.Annotation {
+	var best *model.Annotation
+	bestDistance := math.Inf(1)
+	for i := range annotations {
+		dx := annotations[i].PositionX - target[0]
+		dy := annotations[i].PositionY - target[1]
+		dz := annotations[i].PositionZ - target[2]
+		distance := dx*dx + dy*dy + dz*dz
+		if distance < bestDistance {
+			bestDistance = distance
+			best = &annotations[i]
+		}
+	}
+	// Avoid treating an arbitrary camera direction as a hotspot match. The
+	// threshold is in model world units; focusAnnotation() targets a point
+	// between the hotspot and the model center, so 2.5 units is deliberately
+	// generous but still bounded.
+	if best == nil || bestDistance > 6.25 {
+		return nil
+	}
+	return best
 }
 
 func garmentListSummary(items []GarmentBrief) string {

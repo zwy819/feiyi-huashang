@@ -22,12 +22,22 @@ type Action struct {
 	Label        string `json:"label"`
 }
 
+// CameraState is the browser 3D camera pose supplied with a spatial question.
+// It is untrusted context and is only used to find the nearest hotspot; all
+// annotation IDs are still validated against the database.
+type CameraState struct {
+	Position [3]float64 `json:"position"`
+	Target   [3]float64 `json:"target"`
+	FOV      float64    `json:"fov"`
+}
+
 // ChatContext is the page context supplied by the client. IDs are optional and
 // always re-checked against the database before they are used.
 type ChatContext struct {
-	Page         string `json:"page,omitempty"`
-	GarmentID    int64  `json:"garment_id,omitempty"`
-	AnnotationID int64  `json:"annotation_id,omitempty"`
+	Page         string       `json:"page,omitempty"`
+	GarmentID    int64        `json:"garment_id,omitempty"`
+	AnnotationID int64        `json:"annotation_id,omitempty"`
+	Camera       *CameraState `json:"camera,omitempty"`
 }
 
 type ChatTurn struct {

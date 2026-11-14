@@ -78,6 +78,16 @@
               <p class="text-xs text-mogao-lapis-600 leading-relaxed mt-2">
                 {{ activeAnnotation.content }}
               </p>
+              <div class="mt-3 flex items-center justify-between gap-2 border-t border-mogao-ochre-200/60 pt-2.5">
+                <span class="text-[10px] text-mogao-lapis-400">镜头位姿会作为空间上下文</span>
+                <button
+                  type="button"
+                  @click.stop="askHere()"
+                  class="rounded-full bg-mogao-cinnabar px-2.5 py-1 text-[11px] font-medium text-white transition-opacity hover:opacity-90"
+                >
+                  问此处
+                </button>
+              </div>
             </div>
           </Transition>
 
@@ -463,11 +473,23 @@ function exitTour(): void {
 function openAi(): void {
   if (!garment.value) return
   stopSpeech()
+  const camera = viewerRef.value?.getCameraState?.()
   ai.open({
     page: 'detail',
     garment_id: garment.value.id,
     ...(activeAnnotation.value ? { annotation_id: activeAnnotation.value.id } : {}),
+    ...(camera ? { camera } : {}),
   })
+}
+
+function askHere(): void {
+  const annotation = activeAnnotation.value
+  if (!annotation) {
+    openAi()
+    return
+  }
+  openAi()
+  void nextTick(() => ai.ask(`请结合当前 3D 镜头，讲解「${annotation.title}」的工艺、纹样和观看要点，并给出依据。`))
 }
 
 function focusAnnotationID(id: number): void {

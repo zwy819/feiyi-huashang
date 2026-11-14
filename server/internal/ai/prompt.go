@@ -45,6 +45,11 @@ func buildUserPrompt(
 	if annotationTitle != "" {
 		fmt.Fprintf(&b, "当前打开的热点：%s（ID %d）\n", annotationTitle, ctx.AnnotationID)
 	}
+	if ctx.Camera != nil {
+		fmt.Fprintf(&b, "当前相机：position=(%.2f, %.2f, %.2f)，target=(%.2f, %.2f, %.2f)，fov=%.0f\n",
+			ctx.Camera.Position[0], ctx.Camera.Position[1], ctx.Camera.Position[2],
+			ctx.Camera.Target[0], ctx.Camera.Target[1], ctx.Camera.Target[2], ctx.Camera.FOV)
+	}
 	b.WriteString("\n【证据】\n")
 	total := 0
 	for _, item := range evidence {

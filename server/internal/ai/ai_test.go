@@ -3,6 +3,8 @@ package ai
 import (
 	"strings"
 	"testing"
+
+	"nonlegacy-garment-3d/server/internal/model"
 )
 
 func TestTokenizeChineseAndLatin(t *testing.T) {
@@ -108,6 +110,19 @@ func TestStripHighlight(t *testing.T) {
 	}
 	if strings.Contains(text, "HIGHLIGHT") {
 		t.Fatalf("non-numeric marker leaked into text: %q", text)
+	}
+}
+
+func TestNearestAnnotationForSpatialQuestion(t *testing.T) {
+	items := []model.Annotation{
+		{ID: 1, PositionX: 0, PositionY: 0, PositionZ: 0},
+		{ID: 2, PositionX: 2, PositionY: 1, PositionZ: 0},
+	}
+	if got := nearestAnnotation(items, [3]float64{1.9, 1.1, 0}); got == nil || got.ID != 2 {
+		t.Fatalf("nearest annotation = %+v, want id 2", got)
+	}
+	if got := nearestAnnotation(items, [3]float64{9, 9, 9}); got != nil {
+		t.Fatalf("far camera should not resolve a hotspot, got %+v", got)
 	}
 }
 

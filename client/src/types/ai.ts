@@ -39,10 +39,17 @@ export interface AiStatus {
   message: string
 }
 
+export interface AiCameraState {
+  position: [number, number, number]
+  target: [number, number, number]
+  fov: number
+}
+
 export interface AiChatContext {
   page?: string
   garment_id?: number
   annotation_id?: number
+  camera?: AiCameraState
 }
 
 export interface AiChatTurn {
