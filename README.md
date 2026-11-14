@@ -90,10 +90,15 @@ AI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 AI_API_KEY=你的Key
 AI_CHAT_MODEL=qwen-plus
 AI_EMBEDDING_MODEL=text-embedding-v3
+# 自然语音讲解（Qwen-TTS，可选；失败时自动回退浏览器语音）
+AI_TTS_ENABLED=true
+AI_TTS_MODEL=qwen3-tts-flash
+AI_TTS_VOICE=Cherry
+AI_TTS_CACHE_DIR=./data/tts
 AI_MOCK_MODE=false
 ```
 
-没有 Key 时可以设置 `AI_MOCK_MODE=true`，用内置假模型验证前后端链路；评审演示应使用真实模型。
+没有 Key 时可以设置 `AI_MOCK_MODE=true`，用内置假模型验证前后端链路；评审演示应使用真实模型。语音讲解不生成新音频文件：首次播放调用 Qwen-TTS，之后按文本哈希缓存在 `server/data/tts/`；缓存不可用或接口失败时，前端回退到浏览器中文语音。
 
 重建知识库（修改资料后）：
 
@@ -147,6 +152,8 @@ SSE 事件：`meta`、`tool`、`sources`、`delta`、`action`、`done`、`error`
 | `GET` | `/api/ai/status` | AI 配置与知识库状态 |
 | `POST` | `/api/ai/chat` | SSE 流式导览 |
 | `POST` | `/api/ai/feedback` | 回答点赞/点踩 |
+| `GET` | `/api/tts/garment/:id` | 服饰简介自然语音（WAV，缓存） |
+| `GET` | `/api/tts/annotation/:id?step=1` | 3D 热点讲解语音（WAV，缓存） |
 | `POST` | `/api/admin/ai/reindex` | 管理员重建知识库 |
 
 完整接口见 [docs/API.md](docs/API.md)。

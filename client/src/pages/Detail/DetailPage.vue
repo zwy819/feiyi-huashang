@@ -99,6 +99,7 @@
                     <p class="truncate text-sm font-medium">
                       {{ activeAnnotation.title }}
                       <span v-if="tourSpeaking" class="ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-mogao-gold align-middle" aria-label="正在讲解" />
+                      <span v-else-if="tourLoading" class="ml-1 align-middle text-[10px] text-white/45">语音加载中</span>
                     </p>
                   </div>
                 </div>
@@ -212,7 +213,7 @@
               :aria-pressed="introActive"
               class="inline-flex items-center gap-1.5 rounded-full border border-mogao-gold-300 bg-mogao-gold-50 px-3 py-2 text-xs font-medium text-mogao-lapis-700 transition-colors hover:bg-mogao-gold-100"
             >
-              <span class="text-sm leading-none">{{ introPaused ? '▶' : introSpeaking ? '❚❚' : '🔊' }}</span>
+              <span class="text-sm leading-none">{{ introLoading ? '…' : introPaused ? '▶' : introSpeaking ? '❚❚' : '🔊' }}</span>
               {{ introButtonLabel }}
             </button>
             <button
@@ -284,7 +285,7 @@ import ShareCardModal from '@/components/3D/ShareCardModal.vue'
 import Skeleton from '@/components/Common/Skeleton.vue'
 import CommentSection from '@/components/Comments/CommentSection.vue'
 import { useAiChat } from '@/composables/useAiChat'
-import { useSpeech } from '@/composables/useSpeech'
+import { useNarration } from '@/composables/useNarration'
 import type { Garment, RecommendItem } from '@/types/garment'
 import type { ApiResponse } from '@/types/api'
 import type { FavoriteCheckResult } from '@/types/favorite'
@@ -295,14 +296,16 @@ const router: Router = useRouter()
 const ai = useAiChat()
 const {
   supported: speechSupported,
+  loading: speechLoading,
   speaking: speechSpeaking,
   paused: speechPaused,
   activeKind: speechKind,
-  speak: speakText,
+  speakGarment,
+  speakAnnotation,
   pause: pauseSpeech,
   resume: resumeSpeech,
   stop: stopSpeech,
-} = useSpeech()
+} = useNarration()
 const garment: Ref<Garment | null> = ref(null)
 const recommends: Ref<RecommendItem[]> = ref([])
 const loading: Ref<boolean> = ref(true)
@@ -318,11 +321,14 @@ const tourSteps: Ref<Annotation[]> = ref([])
 const isLastTourStep = computed(() => tourSteps.value.length > 0 && tourIndex.value >= tourSteps.value.length - 1)
 const tourVoiceEnabled: Ref<boolean> = ref(true)
 const tourSpeaking = computed(() => speechKind.value === 'tour' && speechSpeaking.value)
+const tourLoading = computed(() => speechKind.value === 'tour' && speechLoading.value)
 
 const introActive = computed(() => speechKind.value === 'intro')
 const introSpeaking = computed(() => introActive.value && speechSpeaking.value)
 const introPaused = computed(() => introActive.value && speechPaused.value)
+const introLoading = computed(() => introActive.value && speechLoading.value)
 const introButtonLabel = computed(() => {
+  if (introLoading.value) return '加载语音…'
   if (introSpeaking.value) return '暂停讲解'
   if (introPaused.value) return '继续讲解'
   return '听简介'
@@ -364,7 +370,8 @@ function onHotspotClick(annotation: Annotation): void {
 function speakCurrentTourStep(): void {
   const step = activeAnnotation.value
   if (!step || !tourActive.value || !tourVoiceEnabled.value) return
-  speakText(`第${tourIndex.value + 1}站，${step.title}。${step.content}`, 'tour')
+  const text = `第${tourIndex.value + 1}站，${step.title}。${step.content}`
+  speakAnnotation(step.id, tourIndex.value + 1, text)
 }
 
 function toggleTourVoice(): void {
@@ -379,6 +386,10 @@ function toggleTourVoice(): void {
 function toggleIntroSpeech(): void {
   if (!speechSupported) return
   if (tourActive.value) stopTour(false)
+  if (introLoading.value) {
+    stopSpeech()
+    return
+  }
   if (introSpeaking.value) {
     pauseSpeech()
     return
@@ -387,7 +398,7 @@ function toggleIntroSpeech(): void {
     resumeSpeech()
     return
   }
-  speakText(introText.value, 'intro')
+  if (garment.value) speakGarment(garment.value.id, introText.value)
 }
 
 function stopIntroSpeech(): void {
