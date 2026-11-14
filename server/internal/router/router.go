@@ -9,6 +9,7 @@ import (
 	"nonlegacy-garment-3d/server/internal/middleware"
 	"nonlegacy-garment-3d/server/internal/model"
 	"nonlegacy-garment-3d/server/internal/service"
+	"nonlegacy-garment-3d/server/internal/tour"
 	"nonlegacy-garment-3d/server/internal/tts"
 
 	"github.com/gin-gonic/gin"
@@ -48,6 +49,7 @@ func SetupRouter(
 	modelService := service.NewModelService(modelStore, garmentStore, cfg.UploadDir, cfg.MaxUploadSize)
 	submissionService := service.NewSubmissionService(submissionStore, cfg.UploadDir, cfg.MaxImageUploadSize)
 	quizService := service.NewQuizService(quizStore)
+	tourService := tour.NewService(db)
 
 	// --- Handlers ---
 	authHandler := handler.NewAuthHandler(authService)
@@ -64,6 +66,7 @@ func SetupRouter(
 	quizHandler := handler.NewQuizHandler(quizStore, quizService)
 	aiHandler := handler.NewAIHandler(aiService)
 	ttsHandler := handler.NewTTSHandler(ttsService)
+	tourHandler := handler.NewTourHandler(tourService)
 
 	// --- Public Routes ---
 	api := r.Group("/api")
@@ -159,6 +162,9 @@ func SetupRouter(
 			ttsGroup.GET("/garment/:id", ttsHandler.Garment)
 			ttsGroup.GET("/annotation/:id", ttsHandler.Annotation)
 		}
+
+		// One-sentence route planner.
+		api.POST("/tour/plan", tourHandler.Plan)
 	}
 
 	// --- User Routes (JWT required) ---

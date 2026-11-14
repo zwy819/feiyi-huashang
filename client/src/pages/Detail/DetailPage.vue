@@ -161,6 +161,46 @@
             </div>
           </Transition>
 
+          <!-- 一句话路线执行条 -->
+          <Transition name="tour-fade">
+            <div
+              v-if="routeActive && routeStop && !tourActive"
+              class="absolute inset-x-3 bottom-3 z-40 rounded-xl px-3 py-3 text-white shadow-2xl"
+              style="background: rgba(42, 33, 26, 0.92); backdrop-filter: blur(16px); border: 1px solid rgba(201,162,39,0.35);"
+              aria-live="polite"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex min-w-0 items-center gap-2.5">
+                  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-mogao-gold text-xs font-semibold text-mogao-lapis-900">
+                    {{ routeIndex + 1 }}
+                  </span>
+                  <div class="min-w-0">
+                    <p class="whitespace-nowrap text-[9px] tracking-[0.12em] text-mogao-gold-200">
+                      一句话路线 · {{ routeIndex + 1 }}/{{ routePlan?.stops.length }}
+                    </p>
+                    <p class="truncate text-sm font-medium">
+                      {{ routeStop.name }} · {{ routeStop.annotation_title }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex shrink-0 items-center gap-1">
+                  <button @click="nextRouteStop" class="rounded-full bg-mogao-gold px-2.5 py-1.5 text-[11px] font-medium text-mogao-lapis-900 hover:opacity-90">
+                    {{ routeIndex + 1 >= (routePlan?.stops.length || 0) ? '完成' : '下一站' }}
+                  </button>
+                  <button @click="exitRoute" class="rounded-full px-2 py-1.5 text-[11px] text-white/70 hover:bg-white/10" aria-label="退出路线">
+                    退出
+                  </button>
+                  <button @click="stopSpeech" class="flex h-7 w-7 items-center justify-center rounded-full text-white/70 hover:bg-white/10" aria-label="暂停路线语音">
+                    ❚❚
+                  </button>
+                </div>
+              </div>
+              <div class="mt-2 h-0.5 overflow-hidden rounded-full bg-white/15">
+                <div class="h-full rounded-full bg-mogao-gold transition-all duration-500" :style="{ width: `${((routeIndex + 1) / (routePlan?.stops.length || 1)) * 100}%` }" />
+              </div>
+            </div>
+          </Transition>
+
           <div v-if="!modelPath" class="aspect-video bg-gradient-to-br from-mogao-lapis-50 to-mogao-ochre-50 flex items-center justify-center">
             <div class="text-center">
               <span class="text-6xl block mb-3">&#x1f457;</span>
@@ -300,6 +340,7 @@ import type { Garment, RecommendItem } from '@/types/garment'
 import type { ApiResponse } from '@/types/api'
 import type { FavoriteCheckResult } from '@/types/favorite'
 import type { Annotation } from '@/types/annotation'
+import type { TourPlan, TourStop } from '@/services/tour'
 
 const route: RouteLocationNormalizedLoaded = useRoute()
 const router: Router = useRouter()
@@ -332,6 +373,11 @@ const isLastTourStep = computed(() => tourSteps.value.length > 0 && tourIndex.va
 const tourVoiceEnabled: Ref<boolean> = ref(true)
 const tourSpeaking = computed(() => speechKind.value === 'tour' && speechSpeaking.value)
 const tourLoading = computed(() => speechKind.value === 'tour' && speechLoading.value)
+
+const routePlan: Ref<TourPlan | null> = ref(null)
+const routeIndex: Ref<number> = ref(0)
+const routeStop = computed<TourStop | null>(() => routePlan.value?.stops[routeIndex.value] ?? null)
+const routeActive = computed(() => !!routePlan.value && !!routeStop.value)
 
 const introActive = computed(() => speechKind.value === 'intro')
 const introSpeaking = computed(() => introActive.value && speechSpeaking.value)
@@ -470,6 +516,69 @@ function exitTour(): void {
   stopTour(true)
 }
 
+function restoreRoute(): boolean {
+  if (route.query.route !== '1') return false
+  const raw = sessionStorage.getItem('feiyi-route')
+  if (!raw) return false
+  try {
+    const stored = JSON.parse(raw) as { plan?: TourPlan; index?: number }
+    if (!stored.plan?.stops?.length) return false
+    const index = Math.max(0, Math.min(Number(stored.index) || 0, stored.plan.stops.length - 1))
+    const stop = stored.plan.stops[index]
+    if (!stop || stop.garment_id !== Number(route.params.id)) return false
+    routePlan.value = stored.plan
+    routeIndex.value = index
+    void nextTick(() => focusRouteStop())
+    return true
+  } catch {
+    return false
+  }
+}
+
+function focusRouteStop(): void {
+  const stop = routeStop.value
+  if (!stop) return
+  const annotation = annotations.value.find((item) => item.id === stop.annotation_id)
+  if (!annotation) return
+  if (tourActive.value) stopTour(false)
+  activeAnnotation.value = annotation
+  void nextTick(() => {
+    viewerRef.value?.focusAnnotation?.(stop.annotation_id)
+    const text = `路线第${stop.order}站，${stop.name}。${stop.annotation_title}。${annotation.content}`
+    speakAnnotation(stop.annotation_id, stop.order, text)
+  })
+}
+
+function nextRouteStop(): void {
+  const plan = routePlan.value
+  if (!plan) return
+  const nextIndex = routeIndex.value + 1
+  if (nextIndex >= plan.stops.length) {
+    exitRoute()
+    return
+  }
+  const stop = plan.stops[nextIndex]
+  routeIndex.value = nextIndex
+  sessionStorage.setItem('feiyi-route', JSON.stringify({ plan, index: nextIndex }))
+  stopSpeech()
+  if (stop.garment_id !== garment.value?.id) {
+    void router.push({
+      path: `/detail/${stop.garment_id}`,
+      query: { annotation: String(stop.annotation_id), route: '1' },
+    })
+    return
+  }
+  focusRouteStop()
+}
+
+function exitRoute(): void {
+  sessionStorage.removeItem('feiyi-route')
+  routePlan.value = null
+  routeIndex.value = 0
+  stopSpeech()
+  viewerRef.value?.resetView?.(true)
+}
+
 function openAi(): void {
   if (!garment.value) return
   stopSpeech()
@@ -556,6 +665,10 @@ async function loadDetail(id: string | number): Promise<void> {
   loading.value = true
   stopSpeech()
   if (tourActive.value) stopTour(false)
+  if (route.query.route !== '1') {
+    routePlan.value = null
+    sessionStorage.removeItem('feiyi-route')
+  }
   annotations.value = []
   activeAnnotation.value = null
 
@@ -564,6 +677,7 @@ async function loadDetail(id: string | number): Promise<void> {
     .listByGarment(Number(id))
     .then((res) => {
       annotations.value = (res as ApiResponse<Annotation[]>).data || []
+      if (route.query.route === '1' && restoreRoute()) return
       const requested = Number(route.query.annotation)
       if (Number.isFinite(requested) && requested > 0) {
         focusAnnotationID(requested)
@@ -620,7 +734,7 @@ async function loadDetail(id: string | number): Promise<void> {
   } finally {
     loading.value = false
     const requested = Number(route.query.annotation)
-    if (Number.isFinite(requested) && requested > 0) {
+    if (!routeActive.value && Number.isFinite(requested) && requested > 0) {
       void nextTick(() => focusAnnotationID(requested))
     }
   }

@@ -6,14 +6,24 @@
         <h1 class="font-serif text-3xl font-bold text-mogao-lapis-800">服饰浏览</h1>
         <p class="mt-2 text-sm text-mogao-ochre-500">浏览非遗服饰数据库，探索千年衣冠之美</p>
       </div>
-      <button
-        type="button"
-        @click="pickPhoto"
-        class="btn-mogao-secondary flex shrink-0 items-center gap-1.5 text-sm"
-      >
-        <span aria-hidden="true">📷</span>
-        拍照识衣
-      </button>
+      <div class="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          @click="pickPhoto"
+          class="btn-mogao-secondary flex items-center gap-1.5 text-sm"
+        >
+          <span aria-hidden="true">📷</span>
+          拍照识衣
+        </button>
+        <button
+          type="button"
+          @click="openRoute"
+          class="btn-mogao-primary flex items-center gap-1.5 text-sm"
+        >
+          <span aria-hidden="true">◈</span>
+          一句话路线
+        </button>
+      </div>
     </div>
     <input ref="photoInput" type="file" accept="image/*" class="hidden" @change="onPhotoChange" />
 
@@ -186,6 +196,79 @@
         </section>
       </div>
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="routeOpen"
+        class="fixed inset-0 z-[70] flex items-center justify-center bg-mogao-lapis-900/40 px-4 py-6 backdrop-blur-[2px]"
+        @click.self="routeOpen = false"
+      >
+        <section class="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-mogao-leadwhite-50 p-5 shadow-2xl">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-[10px] tracking-[0.2em] text-mogao-gold-600">ONE-SENTENCE ROUTE</p>
+              <h2 class="mt-1 font-serif text-2xl font-bold text-mogao-lapis-800">一句话生成参观路线</h2>
+              <p class="mt-1 text-xs text-mogao-ochre-500">告诉织语你有多少时间、喜欢什么工艺，生成可逐站执行的 3D 路线。</p>
+            </div>
+            <button class="rounded-full p-2 text-mogao-ochre-500 hover:bg-mogao-ochre-100" aria-label="关闭路线规划" @click="routeOpen = false">✕</button>
+          </div>
+
+          <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+            <input
+              v-model="routeQuery"
+              type="text"
+              maxlength="200"
+              class="min-w-0 flex-1 rounded-xl border border-mogao-ochre-300 bg-white px-3.5 py-2.5 text-sm text-mogao-lapis-800 placeholder:text-mogao-ochre-400 focus:border-mogao-gold-500 focus:outline-none focus:ring-2 focus:ring-mogao-gold-200"
+              placeholder="例如：我有40分钟，喜欢刺绣和银饰，想看最有代表性的"
+              @keydown.enter.prevent="generateRoute"
+            />
+            <button
+              type="button"
+              class="btn-mogao-primary shrink-0 text-sm disabled:opacity-40"
+              :disabled="routeLoading || !routeQuery.trim()"
+              @click="generateRoute"
+            >
+              {{ routeLoading ? '规划中…' : '生成路线' }}
+            </button>
+          </div>
+
+          <p v-if="routeError" class="mt-3 rounded-lg bg-mogao-cinnabar-50 px-3 py-2 text-xs text-mogao-cinnabar-700">
+            {{ routeError }}
+          </p>
+
+          <template v-if="routePlan">
+            <div class="mt-4 flex items-center justify-between gap-3 border-b border-mogao-ochre-200 pb-2">
+              <h3 class="font-serif text-lg font-semibold text-mogao-lapis-800">{{ routePlan.title }}</h3>
+              <span class="text-xs text-mogao-ochre-500">共 {{ routePlan.stops.length }} 站 · 约 {{ routePlan.total_minutes }} 分钟</span>
+            </div>
+            <div class="mt-3 space-y-2">
+              <div
+                v-for="stop in routePlan.stops"
+                :key="stop.order"
+                class="flex items-start gap-3 rounded-xl border border-mogao-ochre-200 bg-white p-3"
+              >
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-mogao-cinnabar text-xs font-semibold text-white">{{ stop.order }}</span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span class="font-serif text-sm font-semibold text-mogao-lapis-800">{{ stop.name }}</span>
+                    <span class="text-[11px] text-mogao-ochre-500">{{ stop.ethnic }} · {{ stop.craft }} · {{ stop.duration_min }} 分钟</span>
+                  </div>
+                  <p class="mt-1 text-xs text-mogao-lapis-600">3D 热点：{{ stop.annotation_title }}</p>
+                  <p class="mt-1 text-[11px] text-mogao-gold-700">{{ stop.reason }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center justify-between gap-3">
+              <p class="text-[11px] leading-relaxed text-mogao-ochre-500">路线按馆藏与热点生成；进入详情后可逐站镜头飞行、语音讲解，随时退出。</p>
+              <button type="button" class="btn-mogao-primary shrink-0 text-sm" @click="startRoute">开始路线</button>
+            </div>
+          </template>
+          <p v-else class="mt-4 text-xs leading-relaxed text-mogao-ochre-500">
+            试试：“我有 30 分钟，想看蜡染和银饰”“第一次来，想看最有代表性的 5 件”。
+          </p>
+        </section>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -194,6 +277,7 @@ import { computed, ref, watch, onMounted, type Ref, type ComputedRef } from 'vue
 import { useRouter } from 'vue-router'
 import { garmentAPI } from '@/services/api'
 import { aiAPI } from '@/services/ai'
+import { tourAPI, type TourPlan } from '@/services/tour'
 import { useDebounce } from '@/composables'
 import Card from '@/components/Common/Card.vue'
 import Skeleton from '@/components/Common/Skeleton.vue'
@@ -227,6 +311,11 @@ const photoLoading = ref(false)
 const photoError = ref('')
 const photoPreview = ref('')
 const visionResult = ref<AiVisionResult | null>(null)
+const routeOpen = ref(false)
+const routeLoading = ref(false)
+const routeError = ref('')
+const routeQuery = ref('我有40分钟，喜欢刺绣和银饰，想看最有代表性的')
+const routePlan = ref<TourPlan | null>(null)
 
 const visionAttributes = computed(() => {
   if (!visionResult.value) return []
@@ -289,6 +378,36 @@ function closePhoto(): void {
 function openCandidate(garmentID: number): void {
   closePhoto()
   void router.push(`/detail/${garmentID}`)
+}
+
+function openRoute(): void {
+  routeOpen.value = true
+}
+
+async function generateRoute(): Promise<void> {
+  if (!routeQuery.value.trim() || routeLoading.value) return
+  routeLoading.value = true
+  routeError.value = ''
+  routePlan.value = null
+  try {
+    routePlan.value = await tourAPI.plan(routeQuery.value.trim())
+  } catch (error) {
+    routeError.value = error instanceof Error ? error.message : '路线生成失败，请稍后重试。'
+  } finally {
+    routeLoading.value = false
+  }
+}
+
+function startRoute(): void {
+  const plan = routePlan.value
+  if (!plan || !plan.stops.length) return
+  const first = plan.stops[0]
+  sessionStorage.setItem('feiyi-route', JSON.stringify({ plan, index: 0 }))
+  routeOpen.value = false
+  void router.push({
+    path: `/detail/${first.garment_id}`,
+    query: { annotation: String(first.annotation_id), route: '1' },
+  })
 }
 
 function clearFilters(): void {
