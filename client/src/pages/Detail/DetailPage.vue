@@ -42,10 +42,10 @@
             @click="startTour"
             class="absolute top-3 left-3 z-20 flex items-center gap-1.5 rounded-full bg-mogao-cinnabar/95 px-3 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:scale-105"
             style="backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18);"
-            aria-label="开始 3D 导览"
+            aria-label="开始 3D 语音导览"
           >
-            <span class="text-mogao-gold">▶</span>
-            3D 导览
+            <span class="text-base leading-none">{{ speechSupported ? '🎧' : '▶' }}</span>
+            {{ speechSupported ? '3D 语音导览' : '3D 导览' }}
           </button>
 
           <!-- 生成分享图 -->
@@ -95,8 +95,11 @@
                     {{ tourIndex + 1 }}
                   </span>
                   <div class="min-w-0">
-                    <p class="text-[10px] tracking-[0.2em] text-white/45">3D 导览 · {{ tourIndex + 1 }}/{{ tourSteps.length }}</p>
-                    <p class="truncate text-sm font-medium">{{ activeAnnotation.title }}</p>
+                    <p class="whitespace-nowrap text-[9px] tracking-[0.12em] text-white/45">{{ speechSupported ? '3D 语音导览' : '3D 导览' }} · {{ tourIndex + 1 }}/{{ tourSteps.length }}</p>
+                    <p class="truncate text-sm font-medium">
+                      {{ activeAnnotation.title }}
+                      <span v-if="tourSpeaking" class="ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-mogao-gold align-middle" aria-label="正在讲解" />
+                    </p>
                   </div>
                 </div>
                 <div class="flex shrink-0 items-center gap-1">
@@ -114,6 +117,16 @@
                     {{ isLastTourStep ? '完成' : '下一站' }}
                   </button>
                   <button
+                    v-if="speechSupported"
+                    @click="toggleTourVoice"
+                    :aria-label="tourVoiceEnabled ? '关闭语音讲解' : '开启语音讲解'"
+                    :aria-pressed="tourVoiceEnabled"
+                    :title="tourVoiceEnabled ? '关闭语音讲解' : '开启语音讲解'"
+                    class="flex h-7 w-7 items-center justify-center rounded-full text-sm text-white/75 transition-colors hover:bg-white/10"
+                  >
+                    {{ tourVoiceEnabled ? '🔊' : '🔇' }}
+                  </button>
+                  <button
                     @click="openAi"
                     class="hidden rounded-full px-2.5 py-1.5 text-[11px] text-white/75 transition-colors hover:bg-white/10 sm:inline-flex"
                   >
@@ -122,7 +135,7 @@
                   <button
                     @click="exitTour"
                     class="flex h-7 w-7 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white"
-                    aria-label="退出 3D 导览"
+                    aria-label="退出 3D 语音导览"
                   >
                     ✕
                   </button>
@@ -190,6 +203,30 @@
               <dd class="text-mogao-lapis-700 font-medium mt-0.5">{{ value || '-' }}</dd>
             </div>
           </dl>
+
+          <!-- 语音简介 -->
+          <div v-if="speechSupported" class="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              @click="toggleIntroSpeech"
+              :aria-label="introButtonLabel"
+              :aria-pressed="introActive"
+              class="inline-flex items-center gap-1.5 rounded-full border border-mogao-gold-300 bg-mogao-gold-50 px-3 py-2 text-xs font-medium text-mogao-lapis-700 transition-colors hover:bg-mogao-gold-100"
+            >
+              <span class="text-sm leading-none">{{ introPaused ? '▶' : introSpeaking ? '❚❚' : '🔊' }}</span>
+              {{ introButtonLabel }}
+            </button>
+            <button
+              v-if="introActive"
+              @click="stopIntroSpeech"
+              class="text-xs text-mogao-ochre-500 transition-colors hover:text-mogao-cinnabar"
+            >
+              停止
+            </button>
+            <span v-if="introSpeaking" class="inline-flex items-center gap-1 text-[11px] text-mogao-cinnabar">
+              <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-mogao-cinnabar" />
+              正在讲解
+            </span>
+          </div>
         </div>
 
         <!-- 文化寓意 -->
@@ -247,6 +284,7 @@ import ShareCardModal from '@/components/3D/ShareCardModal.vue'
 import Skeleton from '@/components/Common/Skeleton.vue'
 import CommentSection from '@/components/Comments/CommentSection.vue'
 import { useAiChat } from '@/composables/useAiChat'
+import { useSpeech } from '@/composables/useSpeech'
 import type { Garment, RecommendItem } from '@/types/garment'
 import type { ApiResponse } from '@/types/api'
 import type { FavoriteCheckResult } from '@/types/favorite'
@@ -255,6 +293,16 @@ import type { Annotation } from '@/types/annotation'
 const route: RouteLocationNormalizedLoaded = useRoute()
 const router: Router = useRouter()
 const ai = useAiChat()
+const {
+  supported: speechSupported,
+  speaking: speechSpeaking,
+  paused: speechPaused,
+  activeKind: speechKind,
+  speak: speakText,
+  pause: pauseSpeech,
+  resume: resumeSpeech,
+  stop: stopSpeech,
+} = useSpeech()
 const garment: Ref<Garment | null> = ref(null)
 const recommends: Ref<RecommendItem[]> = ref([])
 const loading: Ref<boolean> = ref(true)
@@ -268,6 +316,32 @@ const tourActive: Ref<boolean> = ref(false)
 const tourIndex: Ref<number> = ref(0)
 const tourSteps: Ref<Annotation[]> = ref([])
 const isLastTourStep = computed(() => tourSteps.value.length > 0 && tourIndex.value >= tourSteps.value.length - 1)
+const tourVoiceEnabled: Ref<boolean> = ref(true)
+const tourSpeaking = computed(() => speechKind.value === 'tour' && speechSpeaking.value)
+
+const introActive = computed(() => speechKind.value === 'intro')
+const introSpeaking = computed(() => introActive.value && speechSpeaking.value)
+const introPaused = computed(() => introActive.value && speechPaused.value)
+const introButtonLabel = computed(() => {
+  if (introSpeaking.value) return '暂停讲解'
+  if (introPaused.value) return '继续讲解'
+  return '听简介'
+})
+const introText = computed(() => {
+  const item = garment.value
+  if (!item) return ''
+  const dynasty = item.dynasty
+    ? (item.dynasty.endsWith('代') ? item.dynasty : `${item.dynasty}代`)
+    : ''
+  return [
+    `${item.name}。`,
+    `${dynasty}，${item.ethnic}，${item.province}。`,
+    `工艺：${item.craft || '未标注'}。`,
+    `材质：${item.material || '未标注'}。`,
+    `纹样：${item.pattern || '未标注'}。`,
+    item.cultural_meaning || '',
+  ].join('')
+})
 
 // 分享卡片
 const viewerRef = ref<InstanceType<typeof ModelViewer> | null>(null)
@@ -287,6 +361,39 @@ function onHotspotClick(annotation: Annotation): void {
   }
 }
 
+function speakCurrentTourStep(): void {
+  const step = activeAnnotation.value
+  if (!step || !tourActive.value || !tourVoiceEnabled.value) return
+  speakText(`第${tourIndex.value + 1}站，${step.title}。${step.content}`, 'tour')
+}
+
+function toggleTourVoice(): void {
+  tourVoiceEnabled.value = !tourVoiceEnabled.value
+  if (!tourVoiceEnabled.value) {
+    if (speechKind.value === 'tour') stopSpeech()
+    return
+  }
+  speakCurrentTourStep()
+}
+
+function toggleIntroSpeech(): void {
+  if (!speechSupported) return
+  if (tourActive.value) stopTour(false)
+  if (introSpeaking.value) {
+    pauseSpeech()
+    return
+  }
+  if (introPaused.value) {
+    resumeSpeech()
+    return
+  }
+  speakText(introText.value, 'intro')
+}
+
+function stopIntroSpeech(): void {
+  if (introActive.value) stopSpeech()
+}
+
 function pickTourSteps(list: Annotation[]): Annotation[] {
   const sorted = [...list].sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
   if (sorted.length <= 3) return sorted
@@ -300,11 +407,13 @@ function goToTourStep(index: number): void {
   activeAnnotation.value = step
   void nextTick(() => {
     viewerRef.value?.focusAnnotation?.(step.id)
+    speakCurrentTourStep()
   })
 }
 
 function startTour(): void {
   if (!modelReady.value || annotations.value.length === 0 || tourActive.value) return
+  stopSpeech()
   tourSteps.value = pickTourSteps(annotations.value)
   tourIndex.value = 0
   tourActive.value = true
@@ -326,6 +435,7 @@ function nextTourStep(): void {
 }
 
 function stopTour(resetCamera = true): void {
+  stopSpeech()
   tourActive.value = false
   tourSteps.value = []
   tourIndex.value = 0
@@ -341,6 +451,7 @@ function exitTour(): void {
 
 function openAi(): void {
   if (!garment.value) return
+  stopSpeech()
   ai.open({
     page: 'detail',
     garment_id: garment.value.id,
@@ -351,6 +462,7 @@ function openAi(): void {
 function focusAnnotationID(id: number): void {
   const annotation = annotations.value.find((item) => item.id === id)
   if (!annotation) return
+  stopSpeech()
   if (tourActive.value) stopTour(false)
   activeAnnotation.value = annotation
   void nextTick(() => {
@@ -409,6 +521,7 @@ watch(
 
 async function loadDetail(id: string | number): Promise<void> {
   loading.value = true
+  stopSpeech()
   if (tourActive.value) stopTour(false)
   annotations.value = []
   activeAnnotation.value = null
