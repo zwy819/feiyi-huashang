@@ -9,6 +9,7 @@ import (
 	"nonlegacy-garment-3d/server/internal/middleware"
 	"nonlegacy-garment-3d/server/internal/model"
 	"nonlegacy-garment-3d/server/internal/service"
+	"nonlegacy-garment-3d/server/internal/tts"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,7 @@ func SetupRouter(
 	annotationStore *model.AnnotationStore,
 	quizStore *model.QuizStore,
 	aiService *ai.Service,
+	ttsService *tts.Service,
 	cfg *config.Config,
 ) *gin.Engine {
 	if cfg.AppEnv == "production" {
@@ -61,6 +63,7 @@ func SetupRouter(
 	annotationHandler := handler.NewAnnotationHandler(annotationStore, garmentStore)
 	quizHandler := handler.NewQuizHandler(quizStore, quizService)
 	aiHandler := handler.NewAIHandler(aiService)
+	ttsHandler := handler.NewTTSHandler(ttsService)
 
 	// --- Public Routes ---
 	api := r.Group("/api")
@@ -147,6 +150,13 @@ func SetupRouter(
 			aiGroup.GET("/status", aiHandler.Status)
 			aiGroup.POST("/chat", aiHandler.Chat)
 			aiGroup.POST("/feedback", aiHandler.Feedback)
+		}
+
+		// Natural voice narration (Qwen-TTS, cached on disk).
+		ttsGroup := api.Group("/tts")
+		{
+			ttsGroup.GET("/garment/:id", ttsHandler.Garment)
+			ttsGroup.GET("/annotation/:id", ttsHandler.Annotation)
 		}
 	}
 

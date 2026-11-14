@@ -16,6 +16,7 @@ import (
 	"nonlegacy-garment-3d/server/internal/database"
 	"nonlegacy-garment-3d/server/internal/model"
 	"nonlegacy-garment-3d/server/internal/router"
+	"nonlegacy-garment-3d/server/internal/tts"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -69,8 +70,11 @@ func main() {
 	}
 	cancel()
 
+	// 自然语音讲解（Qwen-TTS，按文本哈希缓存到本地）
+	ttsService := tts.NewService(cfg, garmentStore, annotationStore)
+
 	// 设置路由
-	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, commentStore, annotationStore, quizStore, aiService, cfg)
+	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, commentStore, annotationStore, quizStore, aiService, ttsService, cfg)
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%s", cfg.Port)

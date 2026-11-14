@@ -50,6 +50,8 @@ server/reports/
 
 # 后端模型上传目录
 server/data/models/
+# 语音合成缓存
+server/data/tts/
 
 # 浏览器验收截图
 client/test-results/

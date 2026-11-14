@@ -34,6 +34,13 @@ type Config struct {
 	AIMaxHistoryTurns  int
 	AIMockMode         bool
 	AIRequestTimeout   time.Duration
+
+	// Natural voice narration via Qwen-TTS. Audio is cached locally so repeat
+	// plays do not call the model again.
+	AITTSEnabled  bool
+	AITTSModel    string
+	AITTSVoice    string
+	AITTSCacheDir string
 }
 
 func Load() *Config {
@@ -62,6 +69,11 @@ func Load() *Config {
 		AIMaxHistoryTurns:  getEnvInt("AI_MAX_HISTORY_TURNS", 8),
 		AIMockMode:         getEnvBool("AI_MOCK_MODE", false),
 		AIRequestTimeout:   getEnvDuration("AI_REQUEST_TIMEOUT", 60*time.Second),
+
+		AITTSEnabled:  getEnvBool("AI_TTS_ENABLED", true),
+		AITTSModel:    getEnv("AI_TTS_MODEL", "qwen3-tts-flash"),
+		AITTSVoice:    getEnv("AI_TTS_VOICE", "Cherry"),
+		AITTSCacheDir: getEnv("AI_TTS_CACHE_DIR", "./data/tts"),
 	}
 }
 
