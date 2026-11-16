@@ -191,15 +191,21 @@ async function handleSubmit(): Promise<void> {
 
 <style scoped>
 .slide-fade-enter-active {
-  transition: all 0.25s ease;
+  transition: opacity 180ms ease, max-height 180ms ease, margin 180ms ease;
 }
 .slide-fade-leave-active {
-  transition: all 0.2s ease;
+  transition: opacity 140ms ease, max-height 140ms ease, margin 140ms ease;
+}
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  max-height: 90px;
+  overflow: hidden;
 }
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   opacity: 0;
   max-height: 0;
+  margin-top: 0;
 }
 
 .fade-enter-active,

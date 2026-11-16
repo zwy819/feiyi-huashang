@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="drawer">
-      <div v-if="open" class="fixed inset-0 z-[70]">
+      <div v-if="open" class="fixed inset-0 w-screen z-[70]">
         <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]" @click="$emit('close')" />
         <aside class="absolute right-0 top-0 h-full w-full max-w-md bg-mogao-leadwhite-50 shadow-2xl flex flex-col">
           <header class="flex items-start justify-between gap-3 px-5 py-4 border-b border-mogao-ochre-200">
@@ -71,11 +71,11 @@ function isExternal(url: string): boolean {
 <style scoped>
 .drawer-enter-active,
 .drawer-leave-active {
-  transition: opacity 0.22s ease;
+  transition: opacity 0.18s ease;
 }
 .drawer-enter-active aside,
 .drawer-leave-active aside {
-  transition: transform 0.25s ease;
+  transition: transform 0.18s ease;
 }
 .drawer-enter-from,
 .drawer-leave-to {

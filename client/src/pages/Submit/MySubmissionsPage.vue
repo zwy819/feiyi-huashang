@@ -29,84 +29,88 @@
       </button>
     </div>
 
-    <!-- 加载中 -->
-    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <Skeleton type="card" :count="3" />
-    </div>
-
-    <!-- 空状态 -->
-    <EmptyState
-      v-else-if="submissions.length === 0"
-      icon="📨"
-      title="暂无投稿"
-      description="分享你身边的非遗服饰图片，为非遗传承贡献力量"
-      :action="{ label: '去投稿', to: '/submit' }"
-    />
-
-    <!-- 投稿卡片列表 -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div
-        v-for="sub in submissions"
-        :key="sub.id"
-        class="bg-white rounded-xl border border-mogao-ochre-100 overflow-hidden hover:shadow-md transition-shadow"
-      >
-        <!-- 图片 -->
-        <div class="aspect-[4/3] bg-mogao-ochre-100 overflow-hidden">
-          <img
-            :src="submissionAPI.getImageUrl(sub.id)"
-            :alt="sub.name"
-            class="w-full h-full object-cover"
-            @error="($event.target as HTMLImageElement).style.display = 'none'"
-          />
+    <div :aria-busy="loading" class="min-h-48">
+      <Transition name="content">
+        <!-- 加载中 -->
+        <div v-if="!hasLoaded" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Skeleton type="card" :count="3" />
         </div>
 
-        <!-- 信息 -->
-        <div class="p-4 space-y-2">
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="font-medium text-mogao-lapis-800 text-sm truncate">{{ sub.name }}</h3>
-            <span
-              class="shrink-0 text-xs px-2 py-0.5 rounded-full font-medium"
-              :class="statusColors[sub.status]"
-            >
-              {{ statusLabels[sub.status] }}
-            </span>
-          </div>
+        <!-- 空状态 -->
+        <EmptyState
+          v-else-if="submissions.length === 0"
+          icon="📨"
+          title="暂无投稿"
+          description="分享你身边的非遗服饰图片，为非遗传承贡献力量"
+          :action="{ label: '去投稿', to: '/submit' }"
+        />
 
-          <div v-if="sub.dynasty || sub.ethnic" class="text-xs text-mogao-lapis-700/60">
-            <span v-if="sub.dynasty">{{ sub.dynasty }}代</span>
-            <span v-if="sub.dynasty && sub.ethnic"> · </span>
-            <span v-if="sub.ethnic">{{ sub.ethnic }}</span>
-          </div>
-
-          <!-- 驳回原因 -->
+        <!-- 投稿卡片列表 -->
+        <TransitionGroup v-else name="list" tag="div" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-150" :class="{ 'opacity-70 pointer-events-none': loading }" :inert="loading">
           <div
-            v-if="sub.status === 'rejected' && sub.reject_reason"
-            class="text-xs text-red-600 bg-red-50 px-2.5 py-1.5 rounded"
+            v-for="sub in submissions"
+            :key="sub.id"
+            class="bg-white rounded-xl border border-mogao-ochre-100 overflow-hidden hover:shadow-md transition-shadow"
           >
-            驳回原因：{{ sub.reject_reason }}
-          </div>
+            <!-- 图片 -->
+            <div class="aspect-[4/3] bg-mogao-ochre-100 overflow-hidden">
+              <img
+                :src="submissionAPI.getImageUrl(sub.id)"
+                :alt="sub.name"
+                class="w-full h-full object-cover"
+                @error="($event.target as HTMLImageElement).style.display = 'none'"
+              />
+            </div>
 
-          <!-- 撤回按钮（已撤回的不可再撤回） -->
-          <button
-            v-if="sub.status !== 'retracted'"
-            @click="handleRetract(sub)"
-            class="text-xs px-2.5 py-1 rounded border border-mogao-ochre-300 text-mogao-ochre-600 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
-          >
-            撤回投稿
-          </button>
+            <!-- 信息 -->
+            <div class="p-4 space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="font-medium text-mogao-lapis-800 text-sm truncate">{{ sub.name }}</h3>
+                <span
+                  class="shrink-0 text-xs px-2 py-0.5 rounded-full font-medium"
+                  :class="statusColors[sub.status]"
+                >
+                  {{ statusLabels[sub.status] }}
+                </span>
+              </div>
 
-          <!-- 关联信息 -->
-          <div v-if="sub.created_garment_id" class="text-xs text-mogao-malachite-600">
-            <router-link :to="`/detail/${sub.created_garment_id}`" class="hover:underline">
-              查看服饰详情 →
-            </router-link>
-          </div>
+              <div v-if="sub.dynasty || sub.ethnic" class="text-xs text-mogao-lapis-700/60">
+                <span v-if="sub.dynasty">{{ sub.dynasty }}代</span>
+                <span v-if="sub.dynasty && sub.ethnic"> · </span>
+                <span v-if="sub.ethnic">{{ sub.ethnic }}</span>
+              </div>
 
-          <div class="text-xs text-mogao-lapis-700/40 pt-1">
-            {{ formatDate(sub.created_at) }}
+              <!-- 驳回原因 -->
+              <div
+                v-if="sub.status === 'rejected' && sub.reject_reason"
+                class="text-xs text-red-600 bg-red-50 px-2.5 py-1.5 rounded"
+              >
+                驳回原因：{{ sub.reject_reason }}
+              </div>
+
+              <!-- 撤回按钮（已撤回的不可再撤回） -->
+              <button
+                v-if="sub.status !== 'retracted'"
+                @click="handleRetract(sub)"
+                class="text-xs px-2.5 py-1 rounded border border-mogao-ochre-300 text-mogao-ochre-600 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
+              >
+                撤回投稿
+              </button>
+
+              <!-- 关联信息 -->
+              <div v-if="sub.created_garment_id" class="text-xs text-mogao-malachite-600">
+                <router-link :to="`/detail/${sub.created_garment_id}`" class="hover:underline">
+                  查看服饰详情 →
+                </router-link>
+              </div>
+
+              <div class="text-xs text-mogao-lapis-700/40 pt-1">
+                {{ formatDate(sub.created_at) }}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </TransitionGroup>
+      </Transition>
     </div>
 
     <!-- 分页 -->
@@ -116,7 +120,7 @@
     >
       <button
         @click="page--; loadSubmissions()"
-        :disabled="page <= 1"
+        :disabled="loading || page <= 1"
         class="px-3 py-1.5 text-sm rounded border border-mogao-ochre-200 hover:bg-mogao-ochre-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         上一页
@@ -126,7 +130,7 @@
       </span>
       <button
         @click="page++; loadSubmissions()"
-        :disabled="page >= Math.ceil(total / limit)"
+        :disabled="loading || page >= Math.ceil(total / limit)"
         class="px-3 py-1.5 text-sm rounded border border-mogao-ochre-200 hover:bg-mogao-ochre-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         下一页
@@ -134,42 +138,44 @@
     </div>
 
     <!-- 撤回确认弹窗 -->
-    <div
-      v-if="retractTarget"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      @click.self="retractTarget = null"
-    >
-      <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
-        <h2 class="text-lg font-semibold text-mogao-lapis-900 mb-3">确认撤回</h2>
-        <p class="text-sm text-mogao-lapis-700/70 mb-2">
-          撤回后该投稿将从"用户贡献"区域移除。
-        </p>
-        <p
-          v-if="retractTarget.created_garment_id"
-          class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded mb-4"
-        >
-          ⚠️ 该投稿已关联服饰记录，撤回后将同时删除服饰，此操作不可撤销。
-        </p>
-        <p v-else class="text-sm text-mogao-ochre-500 mb-4">
-          撤回后仍可在"已撤回"标签页中查看。
-        </p>
-        <div class="flex justify-end gap-3">
-          <button
-            @click="retractTarget = null"
-            class="px-4 py-2 text-sm text-mogao-lapis-700 hover:bg-mogao-ochre-100 rounded-lg transition-colors"
+    <Transition name="overlay">
+      <div
+        v-if="retractTarget"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        @click.self="retractTarget = null"
+      >
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
+          <h2 class="text-lg font-semibold text-mogao-lapis-900 mb-3">确认撤回</h2>
+          <p class="text-sm text-mogao-lapis-700/70 mb-2">
+            撤回后该投稿将从"用户贡献"区域移除。
+          </p>
+          <p
+            v-if="retractTarget.created_garment_id"
+            class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded mb-4"
           >
-            取消
-          </button>
-          <button
-            @click="confirmRetract"
-            :disabled="retracting"
-            class="px-5 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {{ retracting ? '撤回中...' : '确认撤回' }}
-          </button>
+            ⚠️ 该投稿已关联服饰记录，撤回后将同时删除服饰，此操作不可撤销。
+          </p>
+          <p v-else class="text-sm text-mogao-ochre-500 mb-4">
+            撤回后仍可在"已撤回"标签页中查看。
+          </p>
+          <div class="flex justify-end gap-3">
+            <button
+              @click="retractTarget = null"
+              class="px-4 py-2 text-sm text-mogao-lapis-700 hover:bg-mogao-ochre-100 rounded-lg transition-colors"
+            >
+              取消
+            </button>
+            <button
+              @click="confirmRetract"
+              :disabled="retracting"
+              class="px-5 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {{ retracting ? '撤回中...' : '确认撤回' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -183,10 +189,12 @@ import EmptyState from '@/components/Common/EmptyState.vue'
 
 const submissions: Ref<Submission[]> = ref([])
 const loading = ref(true)
+const hasLoaded = ref(false);
 const page = ref(1)
 const limit = 12
 const total = ref(0)
 const activeStatus: Ref<string> = ref('')
+let listRequest = 0;
 
 const statusLabels = SubmissionStatusLabels
 const statusColors = SubmissionStatusColors
@@ -223,6 +231,7 @@ async function confirmRetract() {
 }
 
 async function loadSubmissions() {
+  const request = ++listRequest;
   loading.value = true
   try {
     const params: Record<string, unknown> = { page: page.value, limit }
@@ -230,13 +239,17 @@ async function loadSubmissions() {
       params.status = activeStatus.value
     }
     const res = await submissionAPI.listMy(params as { page?: number; limit?: number; status?: string })
+    if (request !== listRequest) return;
     const data = (res as unknown as { data: { items: Submission[]; total: number } }).data
     submissions.value = data.items
     total.value = data.total
   } catch {
     // fail silently, empty state shows
   } finally {
-    loading.value = false
+    if (request === listRequest) {
+      loading.value = false;
+      hasLoaded.value = true;
+    }
   }
 }
 

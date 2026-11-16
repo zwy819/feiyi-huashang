@@ -10,285 +10,288 @@
     </nav>
 
     <!-- 加载中 -->
-    <Skeleton v-if="loading" type="detail" />
+    <Transition name="content">
+      <Skeleton v-if="loading && !garment" type="detail" />
 
-    <!-- 未找到 -->
-    <div v-else-if="!garment" class="text-center py-20">
-      <p class="text-mogao-cinnabar">服饰信息未找到</p>
-      <router-link to="/explore" class="btn-mogao-primary mt-4 inline-block">返回浏览</router-link>
-    </div>
+      <!-- 未找到 -->
+      <div v-else-if="!garment" class="text-center py-20">
+        <p class="text-mogao-cinnabar">服饰信息未找到</p>
+        <router-link to="/explore" class="btn-mogao-primary mt-4 inline-block">返回浏览</router-link>
+      </div>
 
-    <!-- 详情内容 -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-      <!-- 左侧：3D 预览 -->
-      <div class="lg:col-span-3">
-        <div class="card-mogao overflow-hidden relative">
-          <ModelViewer
-            v-if="modelPath"
-            ref="viewerRef"
-            :model-path="modelPath"
-            :auto-rotate="true"
-            :height="480"
-            :annotations="annotations"
-            :tour-mode="tourActive"
-            :show-background-picker="!tourActive"
-            @hotspot-click="onHotspotClick"
-            @model-ready="modelReady = true"
-          />
+      <!-- 详情内容 -->
+      <div v-else :key="garment.id" :aria-busy="loading" :inert="loading" class="grid grid-cols-1 lg:grid-cols-5 gap-8 transition-opacity duration-150" :class="{ 'opacity-70 pointer-events-none': loading }">
+        <!-- 左侧：3D 预览 -->
+        <div class="lg:col-span-3">
+          <div class="card-mogao overflow-hidden relative">
+            <ModelViewer
+              v-if="modelPath"
+              ref="viewerRef"
+              :model-path="modelPath"
+              :auto-rotate="true"
+              :height="480"
+              :annotations="annotations"
+              :tour-mode="tourActive"
+              :show-background-picker="!tourActive"
+              @hotspot-click="onHotspotClick"
+              @model-ready="modelReady = true"
+            />
 
-          <!-- 3D 导览入口 -->
-          <button
-            v-if="modelReady && annotations.length > 0 && !tourActive"
-            @click="startTour"
-            class="absolute top-3 left-3 z-20 flex items-center gap-1.5 rounded-full bg-mogao-cinnabar/95 px-3 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:scale-105"
-            style="backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18);"
-            aria-label="开始 3D 语音导览"
-          >
-            <span class="text-base leading-none">{{ speechSupported ? '🎧' : '▶' }}</span>
-            {{ speechSupported ? '3D 语音导览' : '3D 导览' }}
-          </button>
-
-          <!-- 生成分享图 -->
-          <button
-            v-if="garment && !tourActive"
-            @click="openShare"
-            class="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs text-white transition-all duration-300 hover:scale-105"
-            style="background: rgba(60, 50, 40, 0.45); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);"
-          >
-            <span>&#x1f4f7;</span>
-            生成分享图
-          </button>
-
-          <!-- 热点讲解卡片 -->
-          <Transition name="annotation-fade">
-            <div
-              v-if="activeAnnotation"
-              class="absolute top-4 right-4 z-30 w-64 bg-mogao-leadwhite-50/95 backdrop-blur border border-mogao-ochre-200 rounded-lg shadow-mogao-lg p-4"
+            <!-- 3D 导览入口 -->
+            <button
+              v-if="modelReady && annotations.length > 0 && !tourActive"
+              @click="startTour"
+              class="absolute top-3 left-3 z-20 flex items-center gap-1.5 rounded-full bg-mogao-cinnabar/95 px-3 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:scale-105"
+              style="backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18);"
+              aria-label="开始 3D 语音导览"
             >
-              <div class="flex items-start justify-between gap-2">
-                <h4 class="font-serif font-semibold text-mogao-lapis-800 text-sm leading-snug">
-                  {{ activeAnnotation.title }}
-                </h4>
-                <button
-                  @click="activeAnnotation = null"
-                  class="text-mogao-ochre-400 hover:text-mogao-cinnabar transition-colors leading-none text-lg"
-                  aria-label="关闭讲解"
-                >&times;</button>
+              <span class="text-base leading-none">{{ speechSupported ? '🎧' : '▶' }}</span>
+              {{ speechSupported ? '3D 语音导览' : '3D 导览' }}
+            </button>
+
+            <!-- 生成分享图 -->
+            <button
+              v-if="garment && !tourActive"
+              @click="openShare"
+              class="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs text-white transition-all duration-300 hover:scale-105"
+              style="background: rgba(60, 50, 40, 0.45); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);"
+            >
+              <span>&#x1f4f7;</span>
+              生成分享图
+            </button>
+
+            <!-- 热点讲解卡片 -->
+            <Transition name="annotation-fade">
+              <div
+                v-if="activeAnnotation"
+                class="absolute top-4 right-4 z-30 w-64 bg-mogao-leadwhite-50/95 backdrop-blur border border-mogao-ochre-200 rounded-lg shadow-mogao-lg p-4"
+              >
+                <div class="flex items-start justify-between gap-2">
+                  <h4 class="font-serif font-semibold text-mogao-lapis-800 text-sm leading-snug">
+                    {{ activeAnnotation.title }}
+                  </h4>
+                  <button
+                    @click="activeAnnotation = null"
+                    class="text-mogao-ochre-400 hover:text-mogao-cinnabar transition-colors leading-none text-lg"
+                    aria-label="关闭讲解"
+                  >&times;</button>
+                </div>
+                <p class="text-xs text-mogao-lapis-600 leading-relaxed mt-2">
+                  {{ activeAnnotation.content }}
+                </p>
+                <div class="mt-3 flex items-center justify-between gap-2 border-t border-mogao-ochre-200/60 pt-2.5">
+                  <span class="text-[10px] text-mogao-lapis-400">镜头位姿会作为空间上下文</span>
+                  <button
+                    type="button"
+                    @click.stop="askHere()"
+                    class="rounded-full bg-mogao-cinnabar px-2.5 py-1 text-[11px] font-medium text-white transition-opacity hover:opacity-90"
+                  >
+                    问此处
+                  </button>
+                </div>
               </div>
-              <p class="text-xs text-mogao-lapis-600 leading-relaxed mt-2">
-                {{ activeAnnotation.content }}
-              </p>
-              <div class="mt-3 flex items-center justify-between gap-2 border-t border-mogao-ochre-200/60 pt-2.5">
-                <span class="text-[10px] text-mogao-lapis-400">镜头位姿会作为空间上下文</span>
+            </Transition>
+
+            <!-- 3D 导览控制条 -->
+            <Transition name="tour-fade">
+              <div
+                v-if="tourActive && activeAnnotation"
+                class="absolute inset-x-3 bottom-3 z-40 rounded-xl px-3 py-3 text-white shadow-2xl"
+                style="background: rgba(36, 31, 27, 0.9); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12);"
+                aria-live="polite"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex min-w-0 items-center gap-2.5">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-mogao-cinnabar text-xs font-semibold">
+                      {{ tourIndex + 1 }}
+                    </span>
+                    <div class="min-w-0">
+                      <p class="whitespace-nowrap text-[9px] tracking-[0.12em] text-white/45">{{ speechSupported ? '3D 语音导览' : '3D 导览' }} · {{ tourIndex + 1 }}/{{ tourSteps.length }}</p>
+                      <p class="truncate text-sm font-medium">
+                        {{ activeAnnotation.title }}
+                        <span v-if="tourSpeaking" class="ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-mogao-gold align-middle" aria-label="正在讲解" />
+                        <span v-else-if="tourLoading" class="ml-1 align-middle text-[10px] text-white/45">语音加载中</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex shrink-0 items-center gap-1">
+                    <button
+                      @click="prevTourStep"
+                      :disabled="tourIndex === 0"
+                      class="rounded-full px-2.5 py-1.5 text-[11px] text-white/75 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      上一站
+                    </button>
+                    <button
+                      @click="nextTourStep"
+                      class="rounded-full bg-mogao-gold px-2.5 py-1.5 text-[11px] font-medium text-mogao-lapis-900 transition-opacity hover:opacity-90"
+                    >
+                      {{ isLastTourStep ? '完成' : '下一站' }}
+                    </button>
+                    <button
+                      v-if="speechSupported"
+                      @click="toggleTourVoice"
+                      :aria-label="tourVoiceEnabled ? '关闭语音讲解' : '开启语音讲解'"
+                      :aria-pressed="tourVoiceEnabled"
+                      :title="tourVoiceEnabled ? '关闭语音讲解' : '开启语音讲解'"
+                      class="flex h-7 w-7 items-center justify-center rounded-full text-sm text-white/75 transition-colors hover:bg-white/10"
+                    >
+                      {{ tourVoiceEnabled ? '🔊' : '🔇' }}
+                    </button>
+                    <button
+                      @click="openAi"
+                      class="hidden rounded-full px-2.5 py-1.5 text-[11px] text-white/75 transition-colors hover:bg-white/10 sm:inline-flex"
+                    >
+                      问织语
+                    </button>
+                    <button
+                      @click="exitTour"
+                      class="flex h-7 w-7 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                      aria-label="退出 3D 语音导览"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div class="mt-2 h-0.5 overflow-hidden rounded-full bg-white/15">
+                  <div
+                    class="h-full rounded-full bg-mogao-gold transition-[width] duration-200"
+                    :style="{ width: `${((tourIndex + 1) / tourSteps.length) * 100}%` }"
+                  />
+                </div>
+              </div>
+            </Transition>
+
+            <!-- 一句话路线执行条 -->
+            <Transition name="tour-fade">
+              <div
+                v-if="routeActive && routeStop && !tourActive"
+                class="absolute inset-x-3 bottom-3 z-40 rounded-xl px-3 py-3 text-white shadow-2xl"
+                style="background: rgba(42, 33, 26, 0.92); backdrop-filter: blur(16px); border: 1px solid rgba(201,162,39,0.35);"
+                aria-live="polite"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex min-w-0 items-center gap-2.5">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-mogao-gold text-xs font-semibold text-mogao-lapis-900">
+                      {{ routeIndex + 1 }}
+                    </span>
+                    <div class="min-w-0">
+                      <p class="whitespace-nowrap text-[9px] tracking-[0.12em] text-mogao-gold-200">
+                        一句话路线 · {{ routeIndex + 1 }}/{{ routePlan?.stops.length }}
+                      </p>
+                      <p class="truncate text-sm font-medium">
+                        {{ routeStop.name }} · {{ routeStop.annotation_title }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex shrink-0 items-center gap-1">
+                    <button @click="nextRouteStop" class="rounded-full bg-mogao-gold px-2.5 py-1.5 text-[11px] font-medium text-mogao-lapis-900 hover:opacity-90">
+                      {{ routeIndex + 1 >= (routePlan?.stops.length || 0) ? '完成' : '下一站' }}
+                    </button>
+                    <button @click="exitRoute" class="rounded-full px-2 py-1.5 text-[11px] text-white/70 hover:bg-white/10" aria-label="退出路线">
+                      退出
+                    </button>
+                    <button @click="stopSpeech" class="flex h-7 w-7 items-center justify-center rounded-full text-white/70 hover:bg-white/10" aria-label="暂停路线语音">
+                      ❚❚
+                    </button>
+                  </div>
+                </div>
+                <div class="mt-2 h-0.5 overflow-hidden rounded-full bg-white/15">
+                  <div class="h-full rounded-full bg-mogao-gold transition-[width] duration-200" :style="{ width: `${((routeIndex + 1) / (routePlan?.stops.length || 1)) * 100}%` }" />
+                </div>
+              </div>
+            </Transition>
+
+            <div v-if="!modelPath" class="aspect-video bg-gradient-to-br from-mogao-lapis-50 to-mogao-ochre-50 flex items-center justify-center">
+              <div class="text-center">
+                <span class="text-6xl block mb-3">&#x1f457;</span>
+                <p class="text-sm text-mogao-ochre-500">3D 服饰展示</p>
+                <p class="text-xs text-mogao-ochre-400 mt-1">暂无 3D 模型</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：信息卡片 -->
+        <div class="lg:col-span-2 space-y-5">
+          <!-- 标题 + 收藏 -->
+          <div class="card-mogao p-6">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <h1 class="font-serif text-2xl font-bold text-mogao-lapis-800">{{ garment.name }}</h1>
+                <p class="text-sm text-mogao-ochre-500 mt-1">
+                  {{ garment.dynasty }}代 · {{ garment.ethnic }} · {{ garment.province }}
+                </p>
+              </div>
+              <div class="flex items-center gap-1">
                 <button
-                  type="button"
-                  @click.stop="askHere()"
-                  class="rounded-full bg-mogao-cinnabar px-2.5 py-1 text-[11px] font-medium text-white transition-opacity hover:opacity-90"
+                  class="inline-flex items-center gap-1.5 rounded-full border border-mogao-gold-300 bg-mogao-gold-50 px-3 py-2 text-xs font-medium text-mogao-lapis-700 hover:bg-mogao-gold-100 transition-colors"
+                  @click="openAi"
                 >
-                  问此处
+                  <span class="font-serif text-mogao-cinnabar">织</span>
+                  问织语
+                </button>
+                <button
+                  @click="toggleFavorite"
+                  :class="[
+                    'p-2 rounded-full transition-colors',
+                    isFavored
+                      ? 'text-mogao-cinnabar bg-mogao-cinnabar-50'
+                      : 'text-mogao-ochre-400 hover:text-mogao-cinnabar hover:bg-mogao-cinnabar-50',
+                  ]"
+                  :aria-label="isFavored ? '取消收藏' : '添加收藏'"
+                >
+                  <svg class="w-6 h-6" :fill="isFavored ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
                 </button>
               </div>
             </div>
-          </Transition>
 
-          <!-- 3D 导览控制条 -->
-          <Transition name="tour-fade">
-            <div
-              v-if="tourActive && activeAnnotation"
-              class="absolute inset-x-3 bottom-3 z-40 rounded-xl px-3 py-3 text-white shadow-2xl"
-              style="background: rgba(36, 31, 27, 0.9); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12);"
-              aria-live="polite"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex min-w-0 items-center gap-2.5">
-                  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-mogao-cinnabar text-xs font-semibold">
-                    {{ tourIndex + 1 }}
-                  </span>
-                  <div class="min-w-0">
-                    <p class="whitespace-nowrap text-[9px] tracking-[0.12em] text-white/45">{{ speechSupported ? '3D 语音导览' : '3D 导览' }} · {{ tourIndex + 1 }}/{{ tourSteps.length }}</p>
-                    <p class="truncate text-sm font-medium">
-                      {{ activeAnnotation.title }}
-                      <span v-if="tourSpeaking" class="ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-mogao-gold align-middle" aria-label="正在讲解" />
-                      <span v-else-if="tourLoading" class="ml-1 align-middle text-[10px] text-white/45">语音加载中</span>
-                    </p>
-                  </div>
-                </div>
-                <div class="flex shrink-0 items-center gap-1">
-                  <button
-                    @click="prevTourStep"
-                    :disabled="tourIndex === 0"
-                    class="rounded-full px-2.5 py-1.5 text-[11px] text-white/75 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
-                  >
-                    上一站
-                  </button>
-                  <button
-                    @click="nextTourStep"
-                    class="rounded-full bg-mogao-gold px-2.5 py-1.5 text-[11px] font-medium text-mogao-lapis-900 transition-opacity hover:opacity-90"
-                  >
-                    {{ isLastTourStep ? '完成' : '下一站' }}
-                  </button>
-                  <button
-                    v-if="speechSupported"
-                    @click="toggleTourVoice"
-                    :aria-label="tourVoiceEnabled ? '关闭语音讲解' : '开启语音讲解'"
-                    :aria-pressed="tourVoiceEnabled"
-                    :title="tourVoiceEnabled ? '关闭语音讲解' : '开启语音讲解'"
-                    class="flex h-7 w-7 items-center justify-center rounded-full text-sm text-white/75 transition-colors hover:bg-white/10"
-                  >
-                    {{ tourVoiceEnabled ? '🔊' : '🔇' }}
-                  </button>
-                  <button
-                    @click="openAi"
-                    class="hidden rounded-full px-2.5 py-1.5 text-[11px] text-white/75 transition-colors hover:bg-white/10 sm:inline-flex"
-                  >
-                    问织语
-                  </button>
-                  <button
-                    @click="exitTour"
-                    class="flex h-7 w-7 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white"
-                    aria-label="退出 3D 语音导览"
-                  >
-                    ✕
-                  </button>
-                </div>
+            <!-- 属性列表 -->
+            <dl class="grid grid-cols-2 gap-3 text-sm">
+              <div v-for="[label, value] in attributes" :key="label">
+                <dt class="text-mogao-ochre-500 text-xs">{{ label }}</dt>
+                <dd class="text-mogao-lapis-700 font-medium mt-0.5">{{ value || '-' }}</dd>
               </div>
-              <div class="mt-2 h-0.5 overflow-hidden rounded-full bg-white/15">
-                <div
-                  class="h-full rounded-full bg-mogao-gold transition-all duration-500"
-                  :style="{ width: `${((tourIndex + 1) / tourSteps.length) * 100}%` }"
-                />
-              </div>
-            </div>
-          </Transition>
+            </dl>
 
-          <!-- 一句话路线执行条 -->
-          <Transition name="tour-fade">
-            <div
-              v-if="routeActive && routeStop && !tourActive"
-              class="absolute inset-x-3 bottom-3 z-40 rounded-xl px-3 py-3 text-white shadow-2xl"
-              style="background: rgba(42, 33, 26, 0.92); backdrop-filter: blur(16px); border: 1px solid rgba(201,162,39,0.35);"
-              aria-live="polite"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex min-w-0 items-center gap-2.5">
-                  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-mogao-gold text-xs font-semibold text-mogao-lapis-900">
-                    {{ routeIndex + 1 }}
-                  </span>
-                  <div class="min-w-0">
-                    <p class="whitespace-nowrap text-[9px] tracking-[0.12em] text-mogao-gold-200">
-                      一句话路线 · {{ routeIndex + 1 }}/{{ routePlan?.stops.length }}
-                    </p>
-                    <p class="truncate text-sm font-medium">
-                      {{ routeStop.name }} · {{ routeStop.annotation_title }}
-                    </p>
-                  </div>
-                </div>
-                <div class="flex shrink-0 items-center gap-1">
-                  <button @click="nextRouteStop" class="rounded-full bg-mogao-gold px-2.5 py-1.5 text-[11px] font-medium text-mogao-lapis-900 hover:opacity-90">
-                    {{ routeIndex + 1 >= (routePlan?.stops.length || 0) ? '完成' : '下一站' }}
-                  </button>
-                  <button @click="exitRoute" class="rounded-full px-2 py-1.5 text-[11px] text-white/70 hover:bg-white/10" aria-label="退出路线">
-                    退出
-                  </button>
-                  <button @click="stopSpeech" class="flex h-7 w-7 items-center justify-center rounded-full text-white/70 hover:bg-white/10" aria-label="暂停路线语音">
-                    ❚❚
-                  </button>
-                </div>
-              </div>
-              <div class="mt-2 h-0.5 overflow-hidden rounded-full bg-white/15">
-                <div class="h-full rounded-full bg-mogao-gold transition-all duration-500" :style="{ width: `${((routeIndex + 1) / (routePlan?.stops.length || 1)) * 100}%` }" />
-              </div>
+            <!-- 语音简介 -->
+            <div v-if="speechSupported" class="mt-4 flex flex-wrap items-center gap-2">
+              <button
+                @click="toggleIntroSpeech"
+                :aria-label="introButtonLabel"
+                :aria-pressed="introActive"
+                class="inline-flex items-center gap-1.5 rounded-full border border-mogao-gold-300 bg-mogao-gold-50 px-3 py-2 text-xs font-medium text-mogao-lapis-700 transition-colors hover:bg-mogao-gold-100"
+              >
+                <span class="text-sm leading-none">{{ introLoading ? '…' : introPaused ? '▶' : introSpeaking ? '❚❚' : '🔊' }}</span>
+                {{ introButtonLabel }}
+              </button>
+              <button
+                v-if="introActive"
+                @click="stopIntroSpeech"
+                class="text-xs text-mogao-ochre-500 transition-colors hover:text-mogao-cinnabar"
+              >
+                停止
+              </button>
+              <span v-if="introSpeaking" class="inline-flex items-center gap-1 text-[11px] text-mogao-cinnabar">
+                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-mogao-cinnabar" />
+                正在讲解
+              </span>
             </div>
-          </Transition>
+          </div>
 
-          <div v-if="!modelPath" class="aspect-video bg-gradient-to-br from-mogao-lapis-50 to-mogao-ochre-50 flex items-center justify-center">
-            <div class="text-center">
-              <span class="text-6xl block mb-3">&#x1f457;</span>
-              <p class="text-sm text-mogao-ochre-500">3D 服饰展示</p>
-              <p class="text-xs text-mogao-ochre-400 mt-1">暂无 3D 模型</p>
-            </div>
+          <!-- 文化寓意 -->
+          <div class="card-mogao p-6">
+            <h3 class="font-serif text-lg font-semibold text-mogao-lapis-800 mb-3">文化寓意</h3>
+            <p class="text-sm text-mogao-lapis-600 leading-relaxed">
+              {{ garment.cultural_meaning || '暂无文化寓意信息' }}
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- 右侧：信息卡片 -->
-      <div class="lg:col-span-2 space-y-5">
-        <!-- 标题 + 收藏 -->
-        <div class="card-mogao p-6">
-          <div class="flex items-start justify-between mb-4">
-            <div>
-              <h1 class="font-serif text-2xl font-bold text-mogao-lapis-800">{{ garment.name }}</h1>
-              <p class="text-sm text-mogao-ochre-500 mt-1">
-                {{ garment.dynasty }}代 · {{ garment.ethnic }} · {{ garment.province }}
-              </p>
-            </div>
-            <div class="flex items-center gap-1">
-              <button
-                class="inline-flex items-center gap-1.5 rounded-full border border-mogao-gold-300 bg-mogao-gold-50 px-3 py-2 text-xs font-medium text-mogao-lapis-700 hover:bg-mogao-gold-100 transition-colors"
-                @click="openAi"
-              >
-                <span class="font-serif text-mogao-cinnabar">织</span>
-                问织语
-              </button>
-              <button
-                @click="toggleFavorite"
-                :class="[
-                  'p-2 rounded-full transition-colors',
-                  isFavored
-                    ? 'text-mogao-cinnabar bg-mogao-cinnabar-50'
-                    : 'text-mogao-ochre-400 hover:text-mogao-cinnabar hover:bg-mogao-cinnabar-50',
-                ]"
-                :aria-label="isFavored ? '取消收藏' : '添加收藏'"
-              >
-                <svg class="w-6 h-6" :fill="isFavored ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- 属性列表 -->
-          <dl class="grid grid-cols-2 gap-3 text-sm">
-            <div v-for="[label, value] in attributes" :key="label">
-              <dt class="text-mogao-ochre-500 text-xs">{{ label }}</dt>
-              <dd class="text-mogao-lapis-700 font-medium mt-0.5">{{ value || '-' }}</dd>
-            </div>
-          </dl>
-
-          <!-- 语音简介 -->
-          <div v-if="speechSupported" class="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              @click="toggleIntroSpeech"
-              :aria-label="introButtonLabel"
-              :aria-pressed="introActive"
-              class="inline-flex items-center gap-1.5 rounded-full border border-mogao-gold-300 bg-mogao-gold-50 px-3 py-2 text-xs font-medium text-mogao-lapis-700 transition-colors hover:bg-mogao-gold-100"
-            >
-              <span class="text-sm leading-none">{{ introLoading ? '…' : introPaused ? '▶' : introSpeaking ? '❚❚' : '🔊' }}</span>
-              {{ introButtonLabel }}
-            </button>
-            <button
-              v-if="introActive"
-              @click="stopIntroSpeech"
-              class="text-xs text-mogao-ochre-500 transition-colors hover:text-mogao-cinnabar"
-            >
-              停止
-            </button>
-            <span v-if="introSpeaking" class="inline-flex items-center gap-1 text-[11px] text-mogao-cinnabar">
-              <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-mogao-cinnabar" />
-              正在讲解
-            </span>
-          </div>
-        </div>
-
-        <!-- 文化寓意 -->
-        <div class="card-mogao p-6">
-          <h3 class="font-serif text-lg font-semibold text-mogao-lapis-800 mb-3">文化寓意</h3>
-          <p class="text-sm text-mogao-lapis-600 leading-relaxed">
-            {{ garment.cultural_meaning || '暂无文化寓意信息' }}
-          </p>
-        </div>
-      </div>
-    </div>
+    </Transition>
 
     <!-- 分享卡片弹窗 -->
     <ShareCardModal
@@ -322,7 +325,7 @@
     </div>
 
     <!-- 评论区 -->
-    <CommentSection v-if="garment" :garment-id="garment.id" />
+    <CommentSection v-if="garment" :key="garment.id" :garment-id="garment.id" />
   </div>
 </template>
 
@@ -360,6 +363,7 @@ const {
 const garment: Ref<Garment | null> = ref(null)
 const recommends: Ref<RecommendItem[]> = ref([])
 const loading: Ref<boolean> = ref(true)
+let detailRequest = 0;
 const isFavored: Ref<boolean> = ref(false)
 const annotations: Ref<Annotation[]> = ref([])
 const activeAnnotation: Ref<Annotation | null> = ref(null)
@@ -662,6 +666,7 @@ watch(
 )
 
 async function loadDetail(id: string | number): Promise<void> {
+  const request = ++detailRequest;
   loading.value = true
   stopSpeech()
   if (tourActive.value) stopTour(false)
@@ -676,6 +681,7 @@ async function loadDetail(id: string | number): Promise<void> {
   annotationAPI
     .listByGarment(Number(id))
     .then((res) => {
+      if (request !== detailRequest) return;
       annotations.value = (res as ApiResponse<Annotation[]>).data || []
       if (route.query.route === '1' && restoreRoute()) return
       const requested = Number(route.query.annotation)
@@ -684,6 +690,7 @@ async function loadDetail(id: string | number): Promise<void> {
       }
     })
     .catch(() => {
+      if (request !== detailRequest) return;
       annotations.value = []
     })
 
@@ -698,6 +705,8 @@ async function loadDetail(id: string | number): Promise<void> {
       )
     }
     const [detailRes, recRes, favRes] = await Promise.all(requests)
+    if (request !== detailRequest) return;
+    modelReady.value = false;
     const detailData = detailRes as ApiResponse<Garment> | Garment
     garment.value = (detailData as ApiResponse<Garment>).data || (detailData as Garment)
 
@@ -709,6 +718,7 @@ async function loadDetail(id: string | number): Promise<void> {
       ? (favData as ApiResponse<FavoriteCheckResult>).data?.isFavorited || (favData as FavoriteCheckResult).isFavorited
       : false
   } catch {
+    if (request !== detailRequest) return;
     garment.value = {
       id: Number(id),
       name: '苗族百褶裙',
@@ -732,10 +742,12 @@ async function loadDetail(id: string | number): Promise<void> {
       { id: 4, name: '蒙古族长袍', similarity: 0 },
     ]
   } finally {
-    loading.value = false
-    const requested = Number(route.query.annotation)
-    if (!routeActive.value && Number.isFinite(requested) && requested > 0) {
-      void nextTick(() => focusAnnotationID(requested))
+    if (request === detailRequest) {
+      loading.value = false
+      const requested = Number(route.query.annotation)
+      if (!routeActive.value && Number.isFinite(requested) && requested > 0) {
+        void nextTick(() => focusAnnotationID(requested))
+      }
     }
   }
 }
@@ -768,7 +780,7 @@ async function toggleFavorite(): Promise<void> {
 <style scoped>
 .annotation-fade-enter-active,
 .annotation-fade-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 .annotation-fade-enter-from,
 .annotation-fade-leave-to {
@@ -776,13 +788,4 @@ async function toggleFavorite(): Promise<void> {
   transform: translateY(-6px);
 }
 
-.tour-fade-enter-active,
-.tour-fade-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-.tour-fade-enter-from,
-.tour-fade-leave-to {
-  opacity: 0;
-  transform: translateY(10px);
-}
 </style>

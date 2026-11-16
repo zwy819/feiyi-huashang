@@ -40,7 +40,11 @@
     <!-- Main Content -->
     <main class="flex-1 overflow-auto">
       <div class="p-8">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <Transition name="page">
+            <component :is="Component" />
+          </Transition>
+        </router-view>
       </div>
     </main>
   </div>

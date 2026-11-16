@@ -1,6 +1,6 @@
 <template>
   <router-view v-slot="{ Component }">
-    <transition name="page" mode="out-in">
+    <transition name="page">
       <component :is="Component" />
     </transition>
   </router-view>
@@ -22,15 +22,3 @@ onErrorCaptured((err: unknown, _instance: unknown, info: string) => {
   return false
 })
 </script>
-
-<style>
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.page-enter-from,
-.page-leave-to {
-  opacity: 0;
-}
-</style>

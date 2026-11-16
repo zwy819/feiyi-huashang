@@ -1,153 +1,157 @@
 <template>
   <div class="page-container max-w-3xl mx-auto">
-    <!-- ======== 开始页 ======== -->
-    <div v-if="phase === 'start'" class="text-center py-10">
-      <span class="text-7xl block mb-4">&#x1f3af;</span>
-      <h1 class="font-serif text-3xl font-bold text-mogao-lapis-800">华裳问答</h1>
-      <p class="text-sm text-mogao-ochre-500 mt-3 max-w-md mx-auto leading-relaxed">
-        从馆藏 40 余件非遗服饰中自动出题，考考你民族、朝代、纹样与工艺的知识。
-        每答对一题得 10 分，答错也有纹样科普可以涨知识。
-      </p>
+    <Transition name="content">
+      <!-- ======== 开始页 ======== -->
+      <div v-if="phase === 'start'" class="text-center py-10">
+        <span class="text-7xl block mb-4">&#x1f3af;</span>
+        <h1 class="font-serif text-3xl font-bold text-mogao-lapis-800">华裳问答</h1>
+        <p class="text-sm text-mogao-ochre-500 mt-3 max-w-md mx-auto leading-relaxed">
+          从馆藏 40 余件非遗服饰中自动出题，考考你民族、朝代、纹样与工艺的知识。
+          每答对一题得 10 分，答错也有纹样科普可以涨知识。
+        </p>
 
-      <div class="flex items-center justify-center gap-4 mt-8">
-        <button @click="startGame(5)" class="btn-mogao-primary px-8 py-3 text-base">快玩 5 题</button>
-        <button @click="startGame(10)" class="btn-mogao-secondary px-8 py-3 text-base">挑战 10 题</button>
-      </div>
-
-      <p v-if="!isLoggedIn" class="text-xs text-mogao-ochre-400 mt-6">
-        游客可正常游玩，登录后成绩会记入排行榜
-      </p>
-      <p v-else-if="myBest > 0" class="text-xs text-mogao-ochre-500 mt-6">
-        你的最高分：<span class="text-mogao-cinnabar font-semibold">{{ myBest }}</span> 分
-      </p>
-
-      <!-- 排行榜 -->
-      <div v-if="leaderboard.length > 0" class="card-mogao p-5 mt-10 text-left">
-        <h3 class="font-serif text-base font-semibold text-mogao-lapis-800 mb-3">&#x1f3c6; 排行榜</h3>
-        <div v-for="(item, i) in leaderboard" :key="item.user_id"
-          class="flex items-center gap-3 py-1.5 text-sm border-b border-mogao-ochre-100 last:border-0">
-          <span class="w-6 text-center font-semibold" :class="medalClass(i)">{{ i + 1 }}</span>
-          <span class="flex-1 text-mogao-lapis-700">{{ item.username }}</span>
-          <span class="text-xs text-mogao-ochre-500">{{ item.correct_count }}/{{ item.total }} 题</span>
-          <span class="font-semibold text-mogao-cinnabar w-14 text-right">{{ item.score }} 分</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ======== 答题页 ======== -->
-    <div v-else-if="phase === 'playing' && questions.length > 0">
-      <!-- 进度与计时 -->
-      <div class="flex items-center justify-between mb-2 text-xs text-mogao-ochre-500">
-        <span>第 {{ currentIndex + 1 }} / {{ questions.length }} 题</span>
-        <span class="font-mono">&#x23f1; {{ elapsed }}s</span>
-      </div>
-      <div class="h-1.5 bg-mogao-ochre-100 rounded-full overflow-hidden mb-6">
-        <div
-          class="h-full bg-gradient-to-r from-mogao-cinnabar to-mogao-gold transition-all duration-300"
-          :style="{ width: `${((currentIndex + 1) / questions.length) * 100}%` }"
-        />
-      </div>
-
-      <!-- 题目卡片 -->
-      <div v-if="currentQuestion" class="card-mogao p-6">
-        <h2 class="font-serif text-lg font-semibold text-mogao-lapis-800 leading-relaxed">
-          {{ currentQuestion.stem }}
-        </h2>
-
-        <div class="grid gap-3 mt-5">
-          <button
-            v-for="(option, i) in currentQuestion.options"
-            :key="i"
-            @click="choose(option)"
-            :disabled="chosen !== null"
-            class="px-4 py-3 text-left text-sm rounded-mogao border transition-all duration-200"
-            :class="optionClass(option)"
-          >
-            <span class="inline-block w-5 font-mono text-xs mr-2 opacity-60">{{ 'ABCD'[i] }}</span>
-            {{ option }}
-          </button>
+        <div class="flex items-center justify-center gap-4 mt-8">
+          <button @click="startGame(5)" class="btn-mogao-primary px-8 py-3 text-base">快玩 5 题</button>
+          <button @click="startGame(10)" class="btn-mogao-secondary px-8 py-3 text-base">挑战 10 题</button>
         </div>
 
-        <!-- 即时判定 + 解析 -->
-        <Transition name="fade">
-          <div v-if="chosen !== null" class="mt-5">
-            <div
-              class="rounded-mogao p-4 text-sm"
-              :class="chosenCorrect
-                ? 'bg-mogao-malachite-50 border border-mogao-malachite-200'
-                : 'bg-mogao-cinnabar-50 border border-mogao-cinnabar-200'"
-            >
-              <p class="font-semibold" :class="chosenCorrect ? 'text-mogao-malachite-600' : 'text-mogao-cinnabar-600'">
-                {{ chosenCorrect ? '✔ 回答正确' : `✘ 回答错误，正确答案是「${correctAnswer}」` }}
-              </p>
-              <p v-if="currentQuestion.explanation" class="text-xs text-mogao-lapis-600 leading-relaxed mt-2">
-                {{ currentQuestion.explanation }}
-              </p>
-              <router-link
-                :to="`/detail/${currentQuestion.garment_id}`"
-                class="inline-block text-xs text-mogao-lapis-500 hover:text-mogao-cinnabar mt-2 underline underline-offset-2"
+        <p v-if="!isLoggedIn" class="text-xs text-mogao-ochre-400 mt-6">
+          游客可正常游玩，登录后成绩会记入排行榜
+        </p>
+        <p v-else-if="myBest > 0" class="text-xs text-mogao-ochre-500 mt-6">
+          你的最高分：<span class="text-mogao-cinnabar font-semibold">{{ myBest }}</span> 分
+        </p>
+
+        <!-- 排行榜 -->
+        <div v-if="leaderboard.length > 0" class="card-mogao p-5 mt-10 text-left">
+          <h3 class="font-serif text-base font-semibold text-mogao-lapis-800 mb-3">&#x1f3c6; 排行榜</h3>
+          <div v-for="(item, i) in leaderboard" :key="item.user_id"
+            class="flex items-center gap-3 py-1.5 text-sm border-b border-mogao-ochre-100 last:border-0">
+            <span class="w-6 text-center font-semibold" :class="medalClass(i)">{{ i + 1 }}</span>
+            <span class="flex-1 text-mogao-lapis-700">{{ item.username }}</span>
+            <span class="text-xs text-mogao-ochre-500">{{ item.correct_count }}/{{ item.total }} 题</span>
+            <span class="font-semibold text-mogao-cinnabar w-14 text-right">{{ item.score }} 分</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======== 答题页 ======== -->
+      <div v-else-if="phase === 'playing' && questions.length > 0">
+        <!-- 进度与计时 -->
+        <div class="flex items-center justify-between mb-2 text-xs text-mogao-ochre-500">
+          <span>第 {{ currentIndex + 1 }} / {{ questions.length }} 题</span>
+          <span class="font-mono">&#x23f1; {{ elapsed }}s</span>
+        </div>
+        <div class="h-1.5 bg-mogao-ochre-100 rounded-full overflow-hidden mb-6">
+          <div
+            class="h-full bg-gradient-to-r from-mogao-cinnabar to-mogao-gold transition-all duration-300"
+            :style="{ width: `${((currentIndex + 1) / questions.length) * 100}%` }"
+          />
+        </div>
+
+        <!-- 题目卡片 -->
+        <Transition name="content">
+          <div v-if="currentQuestion" :key="currentQuestion.id" class="card-mogao p-6">
+            <h2 class="font-serif text-lg font-semibold text-mogao-lapis-800 leading-relaxed">
+              {{ currentQuestion.stem }}
+            </h2>
+
+            <div class="grid gap-3 mt-5">
+              <button
+                v-for="(option, i) in currentQuestion.options"
+                :key="i"
+                @click="choose(option)"
+                :disabled="chosen !== null"
+                class="px-4 py-3 text-left text-sm rounded-mogao border transition-all duration-200"
+                :class="optionClass(option)"
               >
-                查看该服饰 →
-              </router-link>
+                <span class="inline-block w-5 font-mono text-xs mr-2 opacity-60">{{ 'ABCD'[i] }}</span>
+                {{ option }}
+              </button>
             </div>
 
-            <button @click="next" class="btn-mogao-primary w-full mt-4">
-              {{ currentIndex + 1 < questions.length ? '下一题' : '查看结果' }}
-            </button>
+            <!-- 即时判定 + 解析 -->
+            <Transition name="fade">
+              <div v-if="chosen !== null" class="mt-5">
+                <div
+                  class="rounded-mogao p-4 text-sm"
+                  :class="chosenCorrect
+                    ? 'bg-mogao-malachite-50 border border-mogao-malachite-200'
+                    : 'bg-mogao-cinnabar-50 border border-mogao-cinnabar-200'"
+                >
+                  <p class="font-semibold" :class="chosenCorrect ? 'text-mogao-malachite-600' : 'text-mogao-cinnabar-600'">
+                    {{ chosenCorrect ? '✔ 回答正确' : `✘ 回答错误，正确答案是「${correctAnswer}」` }}
+                  </p>
+                  <p v-if="currentQuestion.explanation" class="text-xs text-mogao-lapis-600 leading-relaxed mt-2">
+                    {{ currentQuestion.explanation }}
+                  </p>
+                  <router-link
+                    :to="`/detail/${currentQuestion.garment_id}`"
+                    class="inline-block text-xs text-mogao-lapis-500 hover:text-mogao-cinnabar mt-2 underline underline-offset-2"
+                  >
+                    查看该服饰 →
+                  </router-link>
+                </div>
+
+                <button @click="next" class="btn-mogao-primary w-full mt-4">
+                  {{ currentIndex + 1 < questions.length ? '下一题' : '查看结果' }}
+                </button>
+              </div>
+            </Transition>
           </div>
         </Transition>
       </div>
-    </div>
 
-    <!-- ======== 结果页 ======== -->
-    <div v-else-if="phase === 'result' && result" class="text-center py-8">
-      <div class="card-mogao p-8">
-        <p class="text-sm text-mogao-ochre-500">
-          {{ gradeComment }}
-        </p>
-        <p class="font-serif text-6xl font-bold text-mogao-cinnabar mt-4">{{ result.score }}</p>
-        <p class="text-xs text-mogao-ochre-500 mt-1">分</p>
+      <!-- ======== 结果页 ======== -->
+      <div v-else-if="phase === 'result' && result" class="text-center py-8">
+        <div class="card-mogao p-8">
+          <p class="text-sm text-mogao-ochre-500">
+            {{ gradeComment }}
+          </p>
+          <p class="font-serif text-6xl font-bold text-mogao-cinnabar mt-4">{{ result.score }}</p>
+          <p class="text-xs text-mogao-ochre-500 mt-1">分</p>
 
-        <div class="flex items-center justify-center gap-8 mt-6 text-sm">
-          <div>
-            <p class="text-mogao-lapis-800 font-semibold text-lg">{{ result.correct_count }}/{{ result.total }}</p>
-            <p class="text-xs text-mogao-ochre-500 mt-0.5">答对题数</p>
+          <div class="flex items-center justify-center gap-8 mt-6 text-sm">
+            <div>
+              <p class="text-mogao-lapis-800 font-semibold text-lg">{{ result.correct_count }}/{{ result.total }}</p>
+              <p class="text-xs text-mogao-ochre-500 mt-0.5">答对题数</p>
+            </div>
+            <div>
+              <p class="text-mogao-lapis-800 font-semibold text-lg">{{ result.duration }}s</p>
+              <p class="text-xs text-mogao-ochre-500 mt-0.5">用时</p>
+            </div>
+            <div>
+              <p class="text-mogao-lapis-800 font-semibold text-lg">{{ result.best_score }}</p>
+              <p class="text-xs text-mogao-ochre-500 mt-0.5">历史最高</p>
+            </div>
           </div>
-          <div>
-            <p class="text-mogao-lapis-800 font-semibold text-lg">{{ result.duration }}s</p>
-            <p class="text-xs text-mogao-ochre-500 mt-0.5">用时</p>
-          </div>
-          <div>
-            <p class="text-mogao-lapis-800 font-semibold text-lg">{{ result.best_score }}</p>
-            <p class="text-xs text-mogao-ochre-500 mt-0.5">历史最高</p>
+
+          <p v-if="!isLoggedIn" class="text-xs text-mogao-ochre-400 mt-5">
+            本次为游客模式，
+            <router-link to="/login" class="text-mogao-cinnabar underline underline-offset-2">登录</router-link>
+            后成绩将记入排行榜
+          </p>
+          <p v-else-if="isRecorded" class="text-xs text-mogao-malachite-600 mt-5">✔ 成绩已记入排行榜</p>
+
+          <div class="flex items-center justify-center gap-3 mt-6">
+            <button @click="backHome" class="btn-mogao-secondary text-sm">返回首页</button>
+            <button @click="restart" class="btn-mogao-primary text-sm">再来一局</button>
           </div>
         </div>
 
-        <p v-if="!isLoggedIn" class="text-xs text-mogao-ochre-400 mt-5">
-          本次为游客模式，
-          <router-link to="/login" class="text-mogao-cinnabar underline underline-offset-2">登录</router-link>
-          后成绩将记入排行榜
-        </p>
-        <p v-else-if="isRecorded" class="text-xs text-mogao-malachite-600 mt-5">✔ 成绩已记入排行榜</p>
-
-        <div class="flex items-center justify-center gap-3 mt-6">
-          <button @click="backHome" class="btn-mogao-secondary text-sm">返回首页</button>
-          <button @click="restart" class="btn-mogao-primary text-sm">再来一局</button>
+        <!-- 排行榜 -->
+        <div v-if="leaderboard.length > 0" class="card-mogao p-5 mt-6 text-left">
+          <h3 class="font-serif text-base font-semibold text-mogao-lapis-800 mb-3">&#x1f3c6; 排行榜</h3>
+          <div v-for="(item, i) in leaderboard" :key="item.user_id"
+            class="flex items-center gap-3 py-1.5 text-sm border-b border-mogao-ochre-100 last:border-0">
+            <span class="w-6 text-center font-semibold" :class="medalClass(i)">{{ i + 1 }}</span>
+            <span class="flex-1 text-mogao-lapis-700">{{ item.username }}</span>
+            <span class="text-xs text-mogao-ochre-500">{{ item.correct_count }}/{{ item.total }} 题</span>
+            <span class="font-semibold text-mogao-cinnabar w-14 text-right">{{ item.score }} 分</span>
+          </div>
         </div>
       </div>
-
-      <!-- 排行榜 -->
-      <div v-if="leaderboard.length > 0" class="card-mogao p-5 mt-6 text-left">
-        <h3 class="font-serif text-base font-semibold text-mogao-lapis-800 mb-3">&#x1f3c6; 排行榜</h3>
-        <div v-for="(item, i) in leaderboard" :key="item.user_id"
-          class="flex items-center gap-3 py-1.5 text-sm border-b border-mogao-ochre-100 last:border-0">
-          <span class="w-6 text-center font-semibold" :class="medalClass(i)">{{ i + 1 }}</span>
-          <span class="flex-1 text-mogao-lapis-700">{{ item.username }}</span>
-          <span class="text-xs text-mogao-ochre-500">{{ item.correct_count }}/{{ item.total }} 题</span>
-          <span class="font-semibold text-mogao-cinnabar w-14 text-right">{{ item.score }} 分</span>
-        </div>
-      </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -359,7 +363,7 @@ onUnmounted(stopTimer)
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.25s ease;
+  transition: opacity 180ms ease;
 }
 .fade-enter-from,
 .fade-leave-to {

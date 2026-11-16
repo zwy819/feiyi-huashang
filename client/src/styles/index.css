@@ -12,6 +12,7 @@
 
   html {
     scroll-behavior: smooth;
+    scrollbar-gutter: stable;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -41,6 +42,82 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: theme('colors.mogao.ochre.500');
+  }
+}
+
+/* 替换内容直接入场，避免先退场留下空白；页面不位移以保持 fixed 控件定位。 */
+.page-enter-active {
+  animation: page-in 160ms ease-out;
+}
+
+.content-enter-active,
+.list-enter-active {
+  animation: content-in 160ms ease-out;
+}
+
+.page-leave-active,
+.content-leave-active,
+.list-leave-active {
+  display: none;
+}
+
+.list-move {
+  transition: transform 160ms ease-out;
+}
+
+@keyframes page-in {
+  from { opacity: 0.72; }
+  to { opacity: 1; }
+}
+
+@keyframes content-in {
+  from { opacity: 0.6; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.overlay-enter-active,
+.overlay-leave-active {
+  transition: opacity 180ms ease;
+}
+
+.overlay-enter-active > :last-child,
+.overlay-leave-active > :last-child {
+  transition: transform 180ms ease-out;
+}
+
+.overlay-enter-from,
+.overlay-leave-to {
+  opacity: 0;
+}
+
+.overlay-enter-from > :last-child,
+.overlay-leave-to > :last-child {
+  transform: translateY(8px) scale(0.98);
+}
+
+.tour-fade-enter-active,
+.tour-fade-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease-out;
+}
+
+.tour-fade-enter-from,
+.tour-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
   }
 }
 

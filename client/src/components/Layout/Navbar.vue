@@ -186,10 +186,12 @@ function handleLogout(): void {
 
 <style scoped>
 .slide-enter-active {
-  transition: all 0.25s ease;
+  overflow: hidden;
+  transition: max-height 180ms ease, opacity 180ms ease;
 }
 .slide-leave-active {
-  transition: all 0.25s ease;
+  overflow: hidden;
+  transition: max-height 140ms ease, opacity 140ms ease;
 }
 .slide-enter-from,
 .slide-leave-to {

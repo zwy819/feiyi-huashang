@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <Transition name="modal">
+    <Transition name="overlay">
       <div
         v-if="isOpen"
         class="fixed inset-0 z-50 flex items-center justify-center"
@@ -71,34 +71,3 @@ const sizeClasses: Record<string, string> = {
 
 const sizeClass = computed(() => sizeClasses[props.size || 'md'])
 </script>
-
-<style scoped>
-.modal-enter-active {
-  transition: opacity 0.2s ease;
-}
-.modal-leave-active {
-  transition: opacity 0.2s ease;
-}
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-/* Inner content animation */
-.modal-enter-active > :last-child {
-  animation: modal-in 0.25s ease;
-}
-.modal-leave-active > :last-child {
-  animation: modal-out 0.25s ease;
-}
-
-@keyframes modal-in {
-  from { opacity: 0; transform: scale(0.95) translateY(20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-@keyframes modal-out {
-  from { opacity: 1; transform: scale(1) translateY(0); }
-  to { opacity: 0; transform: scale(0.95) translateY(20px); }
-}
-</style>

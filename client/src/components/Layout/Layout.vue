@@ -2,7 +2,11 @@
   <div class="flex flex-col min-h-screen">
     <Navbar />
     <main class="flex-1">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <Transition name="page">
+          <component :is="Component" />
+        </Transition>
+      </router-view>
     </main>
     <Footer />
     <ToastContainer />

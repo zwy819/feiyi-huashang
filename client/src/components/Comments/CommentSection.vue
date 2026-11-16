@@ -42,177 +42,186 @@
     </div>
 
     <!-- 评论列表 -->
-    <div v-if="loading" class="py-10 text-center text-sm text-mogao-ochre-500">
-      评论加载中…
-    </div>
-
-    <div v-else-if="error" class="card-mogao p-6 text-center text-sm text-red-500">
-      {{ error }}
-    </div>
-
-    <EmptyState
-      v-else-if="comments.length === 0"
-      title="暂无评论"
-      description="来抢沙发吧，分享你对这件服饰的见解"
-      icon="💬"
-    />
-
-    <div v-else class="space-y-4">
-      <div
-        v-for="comment in comments"
-        :key="comment.id"
-        class="card-mogao p-5"
-        :class="comment.status !== 'approved' ? 'opacity-80 border-dashed' : ''"
-      >
-        <!-- 头部：用户名 + 状态 + 时间 -->
-        <div class="flex items-center gap-2 flex-wrap mb-3">
-          <span
-            class="w-8 h-8 rounded-full bg-mogao-ochre-100 text-mogao-lapis-700
-                   flex items-center justify-center text-sm font-semibold flex-shrink-0"
-          >
-            {{ (comment.username || '匿名').charAt(0).toUpperCase() }}
-          </span>
-          <span class="text-sm font-medium text-mogao-lapis-800">
-            {{ comment.username || '匿名用户' }}
-          </span>
-          <span
-            v-if="comment.status !== 'approved'"
-            class="text-xs px-2 py-0.5 rounded-full font-medium"
-            :class="statusColors[comment.status]"
-          >
-            {{ statusLabels[comment.status] }}
-          </span>
-          <span class="ml-auto text-xs text-mogao-ochre-400">
-            {{ formatDate(comment.created_at) }}
-          </span>
+    <div :aria-busy="loading" class="min-h-32">
+      <Transition name="content">
+        <div v-if="!hasLoaded" class="py-10 text-center text-sm text-mogao-ochre-500">
+          评论加载中…
         </div>
 
-        <!-- 编辑模式 -->
-        <template v-if="editingId === comment.id">
-          <textarea
-            v-model="editingContent"
-            rows="3"
-            maxlength="500"
-            class="w-full px-3.5 py-2.5 text-sm border border-mogao-cinnabar-300 rounded-mogao
-                   focus:outline-none focus:border-mogao-cinnabar focus:ring-1 focus:ring-mogao-cinnabar-300 resize-none"
-          />
-          <p class="text-xs text-mogao-ochre-400 mt-1 mb-2">保存后将重新进入审核</p>
-          <div class="flex gap-3">
-            <button
-              @click="saveEdit(comment.id)"
-              :disabled="!editingContent.trim() || submitting"
-              class="px-4 py-1.5 text-sm btn-mogao-primary disabled:opacity-50"
+        <div v-else-if="error" class="card-mogao p-6 text-center text-sm text-red-500">
+          {{ error }}
+        </div>
+
+        <EmptyState
+          v-else-if="comments.length === 0"
+          title="暂无评论"
+          description="来抢沙发吧，分享你对这件服饰的见解"
+          icon="💬"
+        />
+
+        <div v-else class="space-y-4 transition-opacity duration-150" :class="{ 'opacity-70 pointer-events-none': loading }" :inert="loading">
+          <TransitionGroup name="list" tag="div" class="space-y-4">
+            <div
+              v-for="comment in comments"
+              :key="comment.id"
+              class="card-mogao p-5"
+              :class="comment.status !== 'approved' ? 'opacity-80 border-dashed' : ''"
             >
-              保存
+              <!-- 头部：用户名 + 状态 + 时间 -->
+              <div class="flex items-center gap-2 flex-wrap mb-3">
+                <span
+                  class="w-8 h-8 rounded-full bg-mogao-ochre-100 text-mogao-lapis-700
+                         flex items-center justify-center text-sm font-semibold flex-shrink-0"
+                >
+                  {{ (comment.username || '匿名').charAt(0).toUpperCase() }}
+                </span>
+                <span class="text-sm font-medium text-mogao-lapis-800">
+                  {{ comment.username || '匿名用户' }}
+                </span>
+                <span
+                  v-if="comment.status !== 'approved'"
+                  class="text-xs px-2 py-0.5 rounded-full font-medium"
+                  :class="statusColors[comment.status]"
+                >
+                  {{ statusLabels[comment.status] }}
+                </span>
+                <span class="ml-auto text-xs text-mogao-ochre-400">
+                  {{ formatDate(comment.created_at) }}
+                </span>
+              </div>
+
+              <!-- 编辑模式 -->
+              <template v-if="editingId === comment.id">
+                <textarea
+                  v-model="editingContent"
+                  rows="3"
+                  maxlength="500"
+                  class="w-full px-3.5 py-2.5 text-sm border border-mogao-cinnabar-300 rounded-mogao
+                         focus:outline-none focus:border-mogao-cinnabar focus:ring-1 focus:ring-mogao-cinnabar-300 resize-none"
+                />
+                <p class="text-xs text-mogao-ochre-400 mt-1 mb-2">保存后将重新进入审核</p>
+                <div class="flex gap-3">
+                  <button
+                    @click="saveEdit(comment.id)"
+                    :disabled="!editingContent.trim() || submitting"
+                    class="px-4 py-1.5 text-sm btn-mogao-primary disabled:opacity-50"
+                  >
+                    保存
+                  </button>
+                  <button
+                    @click="cancelEdit"
+                    class="px-4 py-1.5 text-sm text-mogao-lapis-700 hover:bg-mogao-ochre-100 rounded-mogao transition-colors"
+                  >
+                    取消
+                  </button>
+                </div>
+              </template>
+
+              <!-- 查看模式 -->
+              <template v-else>
+                <p class="text-sm text-mogao-lapis-600 leading-relaxed whitespace-pre-wrap break-words">
+                  {{ comment.content }}
+                </p>
+
+                <!-- 驳回原因 -->
+                <p v-if="comment.status === 'rejected' && comment.reject_reason" class="text-xs text-red-500 mt-2">
+                  驳回原因：{{ comment.reject_reason }}
+                </p>
+
+                <!-- 操作栏 -->
+                <div class="flex items-center gap-4 mt-3 pt-3 border-t border-mogao-ochre-100">
+                  <!-- 点赞（仅已通过的评论可点赞） -->
+                  <button
+                    v-if="comment.status === 'approved'"
+                    @click="toggleLike(comment)"
+                    class="flex items-center gap-1.5 text-xs transition-colors"
+                    :class="comment.is_liked
+                      ? 'text-mogao-cinnabar'
+                      : 'text-mogao-ochre-500 hover:text-mogao-cinnabar'"
+                    :aria-label="comment.is_liked ? '取消点赞' : '点赞'"
+                  >
+                    <svg class="w-4 h-4" :fill="comment.is_liked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <span>{{ comment.like_count }}</span>
+                  </button>
+                  <span v-else class="text-xs text-mogao-ochre-400">💬 {{ comment.like_count }}</span>
+
+                  <!-- 本人操作 -->
+                  <template v-if="isMine(comment)">
+                    <button
+                      @click="startEdit(comment)"
+                      class="text-xs text-mogao-ochre-500 hover:text-mogao-lapis-800 transition-colors"
+                    >
+                      编辑
+                    </button>
+                    <button
+                      @click="confirmDelete(comment)"
+                      class="text-xs text-mogao-ochre-500 hover:text-red-600 transition-colors"
+                    >
+                      删除
+                    </button>
+                  </template>
+                </div>
+              </template>
+            </div>
+
+          </TransitionGroup>
+
+          <!-- 分页 -->
+          <div
+            v-if="totalPages > 1"
+            class="flex items-center justify-center gap-3 pt-2"
+          >
+            <button
+              @click="page--; loadComments()"
+              :disabled="page <= 1"
+              class="px-3 py-1.5 text-sm rounded-mogao border border-mogao-ochre-200 text-mogao-lapis-700
+                     hover:bg-mogao-ochre-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              上一页
             </button>
+            <span class="text-sm text-mogao-lapis-700">{{ page }} / {{ totalPages }}</span>
             <button
-              @click="cancelEdit"
-              class="px-4 py-1.5 text-sm text-mogao-lapis-700 hover:bg-mogao-ochre-100 rounded-mogao transition-colors"
+              @click="page++; loadComments()"
+              :disabled="page >= totalPages"
+              class="px-3 py-1.5 text-sm rounded-mogao border border-mogao-ochre-200 text-mogao-lapis-700
+                     hover:bg-mogao-ochre-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              取消
+              下一页
             </button>
           </div>
-        </template>
-
-        <!-- 查看模式 -->
-        <template v-else>
-          <p class="text-sm text-mogao-lapis-600 leading-relaxed whitespace-pre-wrap break-words">
-            {{ comment.content }}
-          </p>
-
-          <!-- 驳回原因 -->
-          <p v-if="comment.status === 'rejected' && comment.reject_reason" class="text-xs text-red-500 mt-2">
-            驳回原因：{{ comment.reject_reason }}
-          </p>
-
-          <!-- 操作栏 -->
-          <div class="flex items-center gap-4 mt-3 pt-3 border-t border-mogao-ochre-100">
-            <!-- 点赞（仅已通过的评论可点赞） -->
-            <button
-              v-if="comment.status === 'approved'"
-              @click="toggleLike(comment)"
-              class="flex items-center gap-1.5 text-xs transition-colors"
-              :class="comment.is_liked
-                ? 'text-mogao-cinnabar'
-                : 'text-mogao-ochre-500 hover:text-mogao-cinnabar'"
-              :aria-label="comment.is_liked ? '取消点赞' : '点赞'"
-            >
-              <svg class="w-4 h-4" :fill="comment.is_liked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span>{{ comment.like_count }}</span>
-            </button>
-            <span v-else class="text-xs text-mogao-ochre-400">💬 {{ comment.like_count }}</span>
-
-            <!-- 本人操作 -->
-            <template v-if="isMine(comment)">
-              <button
-                @click="startEdit(comment)"
-                class="text-xs text-mogao-ochre-500 hover:text-mogao-lapis-800 transition-colors"
-              >
-                编辑
-              </button>
-              <button
-                @click="confirmDelete(comment)"
-                class="text-xs text-mogao-ochre-500 hover:text-red-600 transition-colors"
-              >
-                删除
-              </button>
-            </template>
-          </div>
-        </template>
-      </div>
-
-      <!-- 分页 -->
-      <div
-        v-if="totalPages > 1"
-        class="flex items-center justify-center gap-3 pt-2"
-      >
-        <button
-          @click="page--; loadComments()"
-          :disabled="page <= 1"
-          class="px-3 py-1.5 text-sm rounded-mogao border border-mogao-ochre-200 text-mogao-lapis-700
-                 hover:bg-mogao-ochre-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          上一页
-        </button>
-        <span class="text-sm text-mogao-lapis-700">{{ page }} / {{ totalPages }}</span>
-        <button
-          @click="page++; loadComments()"
-          :disabled="page >= totalPages"
-          class="px-3 py-1.5 text-sm rounded-mogao border border-mogao-ochre-200 text-mogao-lapis-700
-                 hover:bg-mogao-ochre-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          下一页
-        </button>
-      </div>
+        </div>
+      </Transition>
     </div>
 
     <!-- 删除确认弹窗 -->
-    <div
-      v-if="deleteTarget"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      @click.self="deleteTarget = null"
-    >
-      <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
-        <h2 class="text-lg font-semibold text-mogao-lapis-900 mb-3">确认删除</h2>
-        <p class="text-sm text-mogao-lapis-700/70 mb-4">删除后无法恢复，确定要删除这条评论吗？</p>
-        <div class="flex justify-end gap-3">
-          <button
-            @click="deleteTarget = null"
-            class="px-4 py-2 text-sm text-mogao-lapis-700 hover:bg-mogao-ochre-100 rounded-lg transition-colors"
-          >
-            取消
-          </button>
-          <button
-            @click="handleDelete"
-            class="px-5 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-          >
-            确认删除
-          </button>
+    <Transition name="overlay">
+      <div
+        v-if="deleteTarget"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+        @click.self="deleteTarget = null"
+      >
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
+          <h2 class="text-lg font-semibold text-mogao-lapis-900 mb-3">确认删除</h2>
+          <p class="text-sm text-mogao-lapis-700/70 mb-4">删除后无法恢复，确定要删除这条评论吗？</p>
+          <div class="flex justify-end gap-3">
+            <button
+              @click="deleteTarget = null"
+              class="px-4 py-2 text-sm text-mogao-lapis-700 hover:bg-mogao-ochre-100 rounded-lg transition-colors"
+            >
+              取消
+            </button>
+            <button
+              @click="handleDelete"
+              class="px-5 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              确认删除
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </section>
 </template>
 
@@ -234,6 +243,7 @@ const { showToast } = useToast()
 
 const comments: Ref<Comment[]> = ref([])
 const loading = ref(true)
+const hasLoaded = ref(false);
 const error: Ref<string | null> = ref(null)
 const page = ref(1)
 const limit = 10
@@ -277,6 +287,7 @@ async function loadComments(): Promise<void> {
     error.value = err instanceof Error ? err.message : '获取评论列表失败'
   } finally {
     loading.value = false
+    hasLoaded.value = true;
   }
 }
 

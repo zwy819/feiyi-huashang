@@ -15,20 +15,27 @@
       </button>
     </Transition>
 
-    <component :is="AiPanel" v-if="isOpen" />
+    <component :is="AiPanel" v-if="panelLoaded" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAiChat } from '@/composables/useAiChat'
 
 const AiPanel = defineAsyncComponent(() => import('./AiPanel.vue'))
-const { isOpen, open, setContext } = useAiChat()
+const { isOpen, open, close, setContext } = useAiChat()
+const panelLoaded = ref(isOpen.value);
+watch(isOpen, value => {
+  if (value) panelLoaded.value = true;
+});
 const route = useRoute()
 
 const visible = computed(() => !route.path.startsWith('/admin') && route.path !== '/login')
+watch(visible, value => {
+  if (!value) close();
+});
 
 function syncContext(): void {
   if (route.path.startsWith('/detail/')) {
