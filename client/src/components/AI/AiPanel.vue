@@ -1,8 +1,13 @@
 <template>
   <Teleport to="body">
-    <Transition name="ai-panel" appear>
-      <div v-if="isOpen" class="fixed inset-0 w-screen z-[60]">
-        <div class="absolute inset-0 bg-mogao-lapis-900/30 backdrop-blur-[2px]" @click="close" />
+      <div
+        ref="panelRoot"
+        class="ai-panel fixed inset-0 w-screen z-[60]"
+        :class="{ 'ai-panel-open': isOpen && mounted }"
+        :inert="!isOpen"
+        :aria-hidden="!isOpen"
+      >
+        <div class="ai-panel-backdrop absolute inset-0" @click="close" />
 
         <section
           class="absolute inset-0 md:inset-y-0 md:left-auto md:right-0 md:w-[460px] bg-mogao-leadwhite-50 shadow-2xl flex flex-col md:border-l md:border-mogao-ochre-200"
@@ -127,7 +132,6 @@
           />
         </section>
       </div>
-    </Transition>
   </Teleport>
 </template>
 
@@ -159,6 +163,8 @@ const {
 const route = useRoute()
 const router = useRouter()
 const draft = ref('')
+const panelRoot = ref<HTMLElement | null>(null);
+const mounted = ref(false);
 const inputRef = ref<HTMLTextAreaElement | null>(null)
 const scrollEl = ref<HTMLElement | null>(null)
 const endRef = ref<HTMLElement | null>(null)
@@ -266,6 +272,9 @@ function onKeydown(event: KeyboardEvent): void {
 
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
+  // Establish the closed styles before the asynchronously loaded panel first opens.
+  panelRoot.value?.getBoundingClientRect();
+  mounted.value = true;
 })
 watch(isOpen, value => {
   document.body.style.overflow = value ? "hidden" : "";
@@ -286,20 +295,43 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.ai-panel-enter-active,
-.ai-panel-leave-active {
-  transition: opacity 180ms ease;
+.ai-panel {
+  --ai-panel-duration: 240ms;
+  --ai-panel-easing: cubic-bezier(0.2, 0, 0.2, 1);
+  visibility: hidden;
+  pointer-events: none;
+  transition: visibility 0s linear var(--ai-panel-duration);
 }
-.ai-panel-enter-active > section,
-.ai-panel-leave-active > section {
-  transition: transform 180ms ease-out;
+.ai-panel-open {
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
 }
-.ai-panel-enter-from,
-.ai-panel-leave-to {
+.ai-panel-backdrop {
+  backdrop-filter: blur(0px);
+  background-color: transparent;
+  transition:
+    backdrop-filter var(--ai-panel-duration) var(--ai-panel-easing),
+    background-color var(--ai-panel-duration) var(--ai-panel-easing);
+}
+.ai-panel > section {
   opacity: 0;
-}
-.ai-panel-enter-from > section,
-.ai-panel-leave-to > section {
   transform: translateX(20px);
+  transition:
+    transform var(--ai-panel-duration) var(--ai-panel-easing),
+    opacity var(--ai-panel-duration) var(--ai-panel-easing);
+}
+.ai-panel-open > .ai-panel-backdrop {
+  @apply bg-mogao-lapis-900/30;
+  backdrop-filter: blur(2px);
+}
+.ai-panel-open > section {
+  opacity: 1;
+  transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-panel {
+    --ai-panel-duration: 0s;
+  }
 }
 </style>
