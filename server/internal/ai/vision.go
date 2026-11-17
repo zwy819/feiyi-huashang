@@ -108,7 +108,7 @@ func (s *Service) rankVisualCandidates(ctx context.Context, attrs VisualAttribut
 	}
 	defer rows.Close()
 
-	var out []VisualCandidate
+	out := make([]VisualCandidate, 0)
 	for rows.Next() {
 		var item VisualCandidate
 		var material, pattern, description string
@@ -121,6 +121,9 @@ func (s *Service) rankVisualCandidates(ctx context.Context, attrs VisualAttribut
 			item.ModelID = &modelID.Int64
 		}
 		score, reasons := visualScore(attrs, item, material, pattern, description)
+		if score == 0 {
+			continue
+		}
 		item.Score = score
 		item.Reason = strings.Join(reasons, "；")
 		out = append(out, item)
