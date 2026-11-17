@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <!-- 页面标题 -->
-    <div class="mb-8 flex items-start justify-between gap-4">
+    <div class="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row">
       <div>
         <h1 class="font-serif text-3xl font-bold text-mogao-lapis-800">服饰浏览</h1>
         <p class="mt-2 text-sm text-mogao-ochre-500">浏览非遗服饰数据库，探索千年衣冠之美</p>
@@ -34,6 +34,7 @@
         <input
           v-model="search"
           type="text"
+          aria-label="搜索服饰名称"
           placeholder="搜索服饰名称..."
           class="w-full px-4 py-2.5 border border-mogao-ochre-200 rounded-mogao text-sm
                  focus:outline-none focus:border-mogao-cinnabar focus:ring-1 focus:ring-mogao-cinnabar-300
@@ -43,17 +44,17 @@
 
       <!-- 筛选行 -->
       <div class="flex flex-wrap gap-3">
-        <select v-model="dynasty" class="px-3 py-2 text-sm border border-mogao-ochre-200 rounded-mogao bg-white focus:outline-none focus:border-mogao-cinnabar text-mogao-lapis-700">
+        <select v-model="dynasty" aria-label="按朝代筛选" class="px-3 py-2 text-sm border border-mogao-ochre-200 rounded-mogao bg-white focus:outline-none focus:border-mogao-cinnabar text-mogao-lapis-700">
           <option v-for="opt in DYNASTY_OPTIONS" :key="opt" :value="opt">
             {{ opt || '全部朝代' }}
           </option>
         </select>
-        <select v-model="ethnic" class="px-3 py-2 text-sm border border-mogao-ochre-200 rounded-mogao bg-white focus:outline-none focus:border-mogao-cinnabar text-mogao-lapis-700">
+        <select v-model="ethnic" aria-label="按民族筛选" class="px-3 py-2 text-sm border border-mogao-ochre-200 rounded-mogao bg-white focus:outline-none focus:border-mogao-cinnabar text-mogao-lapis-700">
           <option v-for="opt in ETHNIC_OPTIONS" :key="opt" :value="opt">
             {{ opt || '全部民族' }}
           </option>
         </select>
-        <select v-model="craft" class="px-3 py-2 text-sm border border-mogao-ochre-200 rounded-mogao bg-white focus:outline-none focus:border-mogao-cinnabar text-mogao-lapis-700">
+        <select v-model="craft" aria-label="按工艺筛选" class="px-3 py-2 text-sm border border-mogao-ochre-200 rounded-mogao bg-white focus:outline-none focus:border-mogao-cinnabar text-mogao-lapis-700">
           <option v-for="opt in CRAFT_OPTIONS" :key="opt" :value="opt">
             {{ opt || '全部工艺' }}
           </option>
@@ -222,6 +223,7 @@
               <input
                 v-model="routeQuery"
                 type="text"
+                aria-label="参观时间与兴趣"
                 maxlength="200"
                 class="min-w-0 flex-1 rounded-xl border border-mogao-ochre-300 bg-white px-3.5 py-2.5 text-sm text-mogao-lapis-800 placeholder:text-mogao-ochre-400 focus:border-mogao-gold-500 focus:outline-none focus:ring-2 focus:ring-mogao-gold-200"
                 placeholder="例如：我有40分钟，喜欢刺绣和银饰，想看最有代表性的"
