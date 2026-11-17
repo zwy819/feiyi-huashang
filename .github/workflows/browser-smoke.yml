@@ -1,0 +1,131 @@
+name: Browser smoke
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PORT: "3001"
+      DB_PATH: ${{ runner.temp }}/browser-smoke.db
+      UPLOAD_DIR: ${{ runner.temp }}/browser-models
+      AI_ENABLED: "true"
+      AI_MOCK_MODE: "true"
+      AI_AGENT_ENABLED: "false"
+      AI_TTS_ENABLED: "false"
+      AI_API_KEY: ""
+      JWT_SECRET: "browser-smoke-only"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache-dependency-path: server/go.sum
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: client/pnpm-lock.yaml
+      - name: Install browser dependencies
+        working-directory: client
+        run: |
+          pnpm install --frozen-lockfile
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm exec playwright-core install --with-deps chromium
+      - name: Build isolated backend
+        working-directory: server
+        run: go build -o "$env:RUNNER_TEMP/browser-api" ./cmd/api
+      - name: Start application
+        run: |
+          Start-Process "$env:RUNNER_TEMP/browser-api" -ArgumentList "-seed" -WorkingDirectory server -RedirectStandardOutput "$env:RUNNER_TEMP/backend.log" -RedirectStandardError "$env:RUNNER_TEMP/backend-error.log"
+          Start-Process node -ArgumentList "node_modules/vite/bin/vite.js", "--host", "127.0.0.1" -WorkingDirectory client -RedirectStandardOutput "$env:RUNNER_TEMP/frontend.log" -RedirectStandardError "$env:RUNNER_TEMP/frontend-error.log"
+          foreach ($url in "http://127.0.0.1:3001/api/health", "http://127.0.0.1:5173") {
+            $ready = $false
+            for ($attempt = 0; $attempt -lt 60; $attempt++) {
+              try {
+                $response = Invoke-WebRequest $url -TimeoutSec 2
+                if ($response.StatusCode -eq 200) { $ready = $true; break }
+              } catch {}
+              Start-Sleep -Seconds 1
+            }
+            if (-not $ready) { throw "Application did not become ready: $url" }
+          }
+      - name: Verify browsing and AI interaction
+        working-directory: client
+        run: |
+          @'
+          import assert from "node:assert/strict";
+          import { mkdir } from "node:fs/promises";
+          import { chromium } from "playwright-core";
+
+          await mkdir("test-results", { recursive: true });
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+          const base = "http://127.0.0.1:5173";
+          try {
+            await page.goto(`${base}/explore`);
+            const search = page.getByRole("textbox", { name: "搜索服饰名称", exact: true });
+            await search.fill("苗族百褶裙");
+            const garment = page.getByRole("link", { name: /^苗族百褶裙 清代/ });
+            await garment.waitFor();
+            await page.getByLabel("按朝代筛选", { exact: true }).selectOption("清");
+            await page.getByLabel("按民族筛选", { exact: true }).selectOption("苗族");
+            await page.getByLabel("按工艺筛选", { exact: true }).selectOption("蜡染");
+            await garment.click();
+            await page.getByRole("heading", { name: "苗族百褶裙", exact: true }).waitFor();
+
+            await page.goto(base);
+            await page.getByRole("button", { name: "打开织语 AI 导览", exact: true }).click();
+            const dialog = page.getByRole("dialog", { name: "织语 AI 导览", exact: true });
+            await dialog.getByRole("button", { name: /苗族百褶裙/ }).click();
+            await page.waitForFunction(() => document.querySelector('[role="dialog"][data-streaming="false"] [data-cite]'), null, { timeout: 30000 });
+            const sources = dialog.getByRole("button", { name: /来源\s*\d+/ }).first();
+            await sources.click();
+            await page.getByText("回答来源", { exact: true }).waitFor();
+            await page.screenshot({ path: "test-results/browser-sources.png" });
+
+            await page.setViewportSize({ width: 390, height: 844 });
+            await page.goto(base);
+            await page.getByRole("button", { name: "打开织语 AI 导览", exact: true }).click();
+            await dialog.waitFor();
+            const box = await dialog.boundingBox();
+            assert.ok(box && box.width >= 389 && box.height >= 843, "Mobile AI panel must fill the viewport");
+            await page.screenshot({ path: "test-results/browser-mobile.png" });
+
+            await page.setViewportSize({ width: 320, height: 844 });
+            await page.goto(`${base}/explore`);
+            await search.waitFor();
+            const dimensions = await page.evaluate(() => ({ viewport: innerWidth, content: document.documentElement.scrollWidth }));
+            assert.ok(dimensions.content <= dimensions.viewport, "Browse page must fit a 320px viewport");
+            await page.screenshot({ path: "test-results/browser-explore.png" });
+          } catch (error) {
+            await page.screenshot({ path: "test-results/browser-failure.png" });
+            throw error;
+          } finally {
+            await browser.close();
+          }
+          '@ | node --input-type=module
+      - name: Upload browser evidence and application logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-smoke
+          path: |
+            client/test-results/
+            ${{ runner.temp }}/backend*.log
+            ${{ runner.temp }}/frontend*.log
+          retention-days: 7
