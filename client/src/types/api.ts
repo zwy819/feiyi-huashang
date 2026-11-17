@@ -21,4 +21,5 @@ export interface GarmentQueryParams extends PaginatedParams {
   dynasty?: string
   ethnic?: string
   craft?: string
+  craft_keyword?: string;
 }

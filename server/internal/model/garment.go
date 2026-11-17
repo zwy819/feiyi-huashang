@@ -26,12 +26,13 @@ type Garment struct {
 }
 
 type GarmentQueryParams struct {
-	Page    int
-	Limit   int
-	Search  string
-	Dynasty string
-	Ethnic  string
-	Craft   string
+	Page         int
+	Limit        int
+	Search       string
+	Dynasty      string
+	Ethnic       string
+	Craft        string
+	CraftKeyword string
 }
 
 type GarmentStore struct {
@@ -62,6 +63,10 @@ func (s *GarmentStore) List(params GarmentQueryParams) ([]Garment, int, error) {
 	if params.Craft != "" {
 		where = append(where, "craft = ?")
 		args = append(args, params.Craft)
+	}
+	if params.CraftKeyword != "" {
+		where = append(where, "instr(craft, ?) > 0")
+		args = append(args, params.CraftKeyword)
 	}
 
 	var total int

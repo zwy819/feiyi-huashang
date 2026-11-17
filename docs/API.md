@@ -227,6 +227,7 @@ GET /api/garments
 | `dynasty` | string | — | 朝代精确筛选 |
 | `ethnic` | string | — | 民族精确筛选 |
 | `craft` | string | — | 工艺精确筛选 |
+| `craft_keyword` | string | — | 工艺包含关键词筛选，如「蜡染」同时匹配「蜡染+刺绣」；与其他条件取交集 |
 
 **示例请求：**
 

@@ -437,7 +437,7 @@ async function fetchGarments(): Promise<void> {
       search: debouncedSearch.value || undefined,
       dynasty: dynasty.value || undefined,
       ethnic: ethnic.value || undefined,
-      craft: craft.value || undefined,
+      craft_keyword: craft.value || undefined,
     })
     if (request !== listRequest) return;
     const data = (result as ApiResponse<PaginatedData<GarmentListItem>>).data || (result as unknown as PaginatedData<GarmentListItem>)

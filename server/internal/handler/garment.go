@@ -11,9 +11,9 @@ import (
 )
 
 type GarmentHandler struct {
-	garmentStore    *model.GarmentStore
-	garmentService  *service.GarmentService
-	dailyService    *service.DailyService
+	garmentStore   *model.GarmentStore
+	garmentService *service.GarmentService
+	dailyService   *service.DailyService
 }
 
 func NewGarmentHandler(garmentStore *model.GarmentStore, garmentService *service.GarmentService, dailyService *service.DailyService) *GarmentHandler {
@@ -36,12 +36,13 @@ func (h *GarmentHandler) List(c *gin.Context) {
 	}
 
 	params := model.GarmentQueryParams{
-		Page:    page,
-		Limit:   limit,
-		Search:  c.Query("search"),
-		Dynasty: c.Query("dynasty"),
-		Ethnic:  c.Query("ethnic"),
-		Craft:   c.Query("craft"),
+		Page:         page,
+		Limit:        limit,
+		Search:       c.Query("search"),
+		Dynasty:      c.Query("dynasty"),
+		Ethnic:       c.Query("ethnic"),
+		Craft:        c.Query("craft"),
+		CraftKeyword: c.Query("craft_keyword"),
 	}
 
 	garments, total, err := h.garmentStore.List(params)
