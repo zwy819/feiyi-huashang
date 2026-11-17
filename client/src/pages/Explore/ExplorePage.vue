@@ -66,8 +66,17 @@
     <div :aria-busy="loading" class="relative min-h-48">
       <p v-if="loading && hasLoaded" role="status" class="absolute -top-6 right-0 text-xs text-mogao-ochre-500">正在更新…</p>
       <Transition name="content">
-        <div v-if="!hasLoaded" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div v-if="!hasLoaded || (loading && garments.length === 0)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <Skeleton type="card" :count="8" />
+        </div>
+
+        <div v-else-if="listError" role="alert">
+          <EmptyState
+            icon="!"
+            title="服饰加载失败"
+            :description="listError"
+            :action="{ label: '重新加载', onClick: fetchGarments }"
+          />
         </div>
 
         <EmptyState
@@ -301,6 +310,7 @@ const CRAFT_OPTIONS: string[] = ['', '刺绣', '蜡染', '织锦', '缂丝', '�
 const garments: Ref<GarmentListItem[]> = ref([])
 const loading: Ref<boolean> = ref(true)
 const hasLoaded = ref(false);
+const listError = ref("");
 const page: Ref<number> = ref(1)
 const total: Ref<number> = ref(0)
 let listRequest = 0;
@@ -429,6 +439,7 @@ function clearFilters(): void {
 
 async function fetchGarments(): Promise<void> {
   const request = ++listRequest;
+  listError.value = "";
   loading.value = true
   try {
     const result = await garmentAPI.list({
@@ -445,14 +456,9 @@ async function fetchGarments(): Promise<void> {
     total.value = data.total || 0
   } catch {
     if (request !== listRequest) return;
-    garments.value = [
-      { id: 1, name: '苗族百褶裙', dynasty: '清', ethnic: '苗族', craft: '蜡染 + 刺绣', province: '贵州', model_id: null },
-      { id: 2, name: '苏绣旗袍', dynasty: '现代', ethnic: '汉族', craft: '苏绣', province: '江苏', model_id: null },
-      { id: 3, name: '藏族氆氇袍', dynasty: '清', ethnic: '藏族', craft: '氆氇织造', province: '西藏', model_id: null },
-      { id: 4, name: '蒙古族长袍', dynasty: '元', ethnic: '蒙古族', craft: '镶边刺绣', province: '内蒙古', model_id: null },
-      { id: 5, name: '傣族筒裙', dynasty: '清', ethnic: '傣族', craft: '织锦', province: '云南', model_id: null },
-    ]
-    total.value = 5
+    garments.value = [];
+    total.value = 0;
+    listError.value = "暂时无法获取服饰，请检查网络后重试。";
   } finally {
     if (request === listRequest) {
       loading.value = false;
