@@ -66,11 +66,29 @@ try {
   await page.screenshot({ path: path.join(outDir, 'ai-sources.png') })
   await page.getByRole('button', { name: '关闭来源' }).click()
 
-  await page.goto(base + '/detail/163', { waitUntil: 'networkidle' })
+  const catalogResponse = await page.request.get(base + '/api/garments?page=1&limit=100')
+  const catalog = await catalogResponse.json()
+  if (!catalogResponse.ok() || catalog.code !== 0 || !Array.isArray(catalog.data?.items)) {
+    throw new Error('Unable to load the collection for 3D verification')
+  }
+  let target
+  let targetAnnotation
+  for (const garment of catalog.data.items) {
+    if (!garment.model_id && !garment.model_url) continue
+    const response = await page.request.get(`${base}/api/garments/${garment.id}/annotations`)
+    const annotations = await response.json()
+    if (response.ok() && annotations.code === 0 && annotations.data?.length) {
+      target = garment
+      targetAnnotation = annotations.data[0]
+      break
+    }
+  }
+  if (!target || !targetAnnotation) throw new Error('No garment with a model and annotations is available')
+  await page.goto(`${base}/detail/${target.id}`, { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: '问织语' }).click()
   const detailDialog = page.getByRole('dialog', { name: '织语 AI 导览' })
   await detailDialog.waitFor({ state: 'visible' })
-  await detailDialog.getByRole('textbox', { name: '输入你的问题' }).fill('这条裙子的裙摆工艺有什么特点？')
+  await detailDialog.getByRole('textbox', { name: '输入你的问题' }).fill(`请解释「${targetAnnotation.title}」，并在 3D 中指出这个细节。`)
   await detailDialog.getByRole('button', { name: '发送', exact: true }).click()
   await waitForAnswer(detailDialog)
 

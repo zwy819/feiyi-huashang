@@ -135,6 +135,27 @@ func (t *Toolbox) SearchGarments(ctx context.Context, filters FilterSet, name st
 	if limit <= 0 || limit > 12 {
 		limit = 8
 	}
+	where, args := garmentWhere(filters, name)
+	args = append(args, limit)
+	query := `SELECT id, name, dynasty, ethnic, craft, province, model_id FROM garments
+		WHERE ` + strings.Join(where, " AND ") + ` ORDER BY id DESC LIMIT ?`
+	rows, err := t.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := make([]GarmentBrief, 0, limit)
+	for rows.Next() {
+		var g GarmentBrief
+		if err := rows.Scan(&g.ID, &g.Name, &g.Dynasty, &g.Ethnic, &g.Craft, &g.Province, &g.ModelID); err != nil {
+			return nil, err
+		}
+		out = append(out, g)
+	}
+	return out, rows.Err()
+}
+
+func garmentWhere(filters FilterSet, name string) ([]string, []any) {
 	where := []string{"1=1"}
 	args := []any{}
 	if filters.Ethnic != "" {
@@ -158,23 +179,7 @@ func (t *Toolbox) SearchGarments(ctx context.Context, filters FilterSet, name st
 		like := "%" + name + "%"
 		args = append(args, like, like, like)
 	}
-	args = append(args, limit)
-	query := `SELECT id, name, dynasty, ethnic, craft, province, model_id FROM garments
-		WHERE ` + strings.Join(where, " AND ") + ` ORDER BY id DESC LIMIT ?`
-	rows, err := t.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	out := make([]GarmentBrief, 0, limit)
-	for rows.Next() {
-		var g GarmentBrief
-		if err := rows.Scan(&g.ID, &g.Name, &g.Dynasty, &g.Ethnic, &g.Craft, &g.Province, &g.ModelID); err != nil {
-			return nil, err
-		}
-		out = append(out, g)
-	}
-	return out, rows.Err()
+	return where, args
 }
 
 func (t *Toolbox) GetGarment(ctx context.Context, id int64) (*model.Garment, error) {
@@ -185,7 +190,7 @@ func (t *Toolbox) GetAnnotations(ctx context.Context, garmentID int64) ([]model.
 	return t.annotationStore.ListByGarment(garmentID)
 }
 
-func (t *Toolbox) GetStatistics(ctx context.Context, dimension string) ([]StatsItem, error) {
+func (t *Toolbox) GetStatistics(ctx context.Context, dimension string, filters FilterSet) ([]StatsItem, error) {
 	column := ""
 	switch dimension {
 	case "province", "ethnic", "craft", "dynasty":
@@ -193,9 +198,11 @@ func (t *Toolbox) GetStatistics(ctx context.Context, dimension string) ([]StatsI
 	default:
 		return nil, fmt.Errorf("unsupported statistics dimension %q", dimension)
 	}
+	where, args := garmentWhere(filters, "")
+	where = append(where, column+" != ''")
 	rows, err := t.db.QueryContext(ctx, fmt.Sprintf(`
-		SELECT %s, COUNT(*) AS n FROM garments WHERE %s != ''
-		GROUP BY %s ORDER BY n DESC, %s ASC LIMIT 8`, column, column, column, column))
+		SELECT %s, COUNT(*) AS n FROM garments WHERE %s
+		GROUP BY %s ORDER BY n DESC, %s ASC LIMIT 8`, column, strings.Join(where, " AND "), column, column), args...)
 	if err != nil {
 		return nil, err
 	}
@@ -209,6 +216,42 @@ func (t *Toolbox) GetStatistics(ctx context.Context, dimension string) ([]StatsI
 		items = append(items, item)
 	}
 	return items, rows.Err()
+}
+
+func (t *Toolbox) CountStatistics(ctx context.Context, dimension string, filters FilterSet) (int, error) {
+	where, args := garmentWhere(filters, "")
+	expression := "COUNT(*)"
+	switch dimension {
+	case "garment":
+	case "province", "ethnic", "craft", "dynasty":
+		expression = fmt.Sprintf("COUNT(DISTINCT %s)", dimension)
+		where = append(where, dimension+" != ''")
+	default:
+		return 0, fmt.Errorf("unsupported statistics dimension %q", dimension)
+	}
+	var count int
+	err := t.db.QueryRowContext(ctx, "SELECT "+expression+" FROM garments WHERE "+strings.Join(where, " AND "), args...).Scan(&count)
+	return count, err
+}
+
+func (t *Toolbox) StatisticsSummary(ctx context.Context, dimension, mode string, filters FilterSet) (string, error) {
+	if mode == "total" {
+		count, err := t.CountStatistics(ctx, dimension, filters)
+		label := "本项目馆藏"
+		if !filters.Empty() {
+			label += "（" + filters.Summary() + "）"
+		}
+		return fmt.Sprintf("%s%s总数为 %d。按数据库当前记录统计。", label, dimensionLabel(dimension), count), err
+	}
+	if mode != "ranking" {
+		return "", fmt.Errorf("unsupported statistics mode %q", mode)
+	}
+	items, err := t.GetStatistics(ctx, dimension, filters)
+	summary := statsSummary(dimension, items)
+	if !filters.Empty() {
+		summary = "筛选条件：" + filters.Summary() + "。" + summary
+	}
+	return summary, err
 }
 
 func matchesDimension(query, column, value string) bool {

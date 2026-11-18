@@ -79,9 +79,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, type Ref, type ComputedRef } from 'vue'
 import * as echarts from 'echarts/core'
-import { PieChart, MapChart, BarChart, SunburstChart } from 'echarts/charts'
+import { MapChart, ScatterChart, EffectScatterChart, BarChart, SunburstChart } from 'echarts/charts'
 import {
-  GridComponent, TooltipComponent, LegendComponent,
+  GridComponent, TooltipComponent,
   GeoComponent, VisualMapComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -95,8 +95,8 @@ import type { ApiResponse } from '@/types/api'
 import type { EChartsOption } from 'echarts'
 
 echarts.use([
-  PieChart, MapChart, BarChart, SunburstChart,
-  GridComponent, TooltipComponent, LegendComponent,
+  MapChart, ScatterChart, EffectScatterChart, BarChart, SunburstChart,
+  GridComponent, TooltipComponent,
   GeoComponent, VisualMapComponent,
   CanvasRenderer,
 ])

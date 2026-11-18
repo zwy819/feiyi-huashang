@@ -75,6 +75,8 @@
         :style="{ left: `${spot.x}px`, top: `${spot.y}px`, opacity: spot.visible ? undefined : 0.3 }"
         :title="spot.annotation.title"
         :aria-label="`讲解点：${spot.annotation.title}`"
+        :disabled="!spot.visible"
+        :aria-pressed="activeAnnotationId === spot.annotation.id"
         @click.stop="onHotspotClick(spot.annotation)"
       >{{ i + 1 }}</button>
     </div>
@@ -117,11 +119,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, onUnmounted, nextTick, type Ref } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick, type Ref } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { loadModel } from './ModelLoader'
 import type { Annotation } from '@/types/annotation'
+import { useModelHotspots } from "@/composables/useModelHotspots";
 
 interface Props {
   modelPath?: string
@@ -203,90 +206,12 @@ const loadError: Ref<string | null> = ref(null)
 const webglLost: Ref<boolean> = ref(false)
 const currentBg: Ref<string> = ref(props.background)
 
-// ============================================
-// 热点标注（投影 HTML 层 + 逐帧遮挡检测）
-// ============================================
-interface HotspotScreen {
-  annotation: Annotation
-  x: number
-  y: number
-  visible: boolean
-}
-
-const showAnnotations: Ref<boolean> = ref(true)
-const activeAnnotationId: Ref<number | null> = ref(null)
-const hotspotScreens: Ref<HotspotScreen[]> = ref([])
-
-const visibleHotspots = computed<HotspotScreen[]>(() =>
-  showAnnotations.value ? hotspotScreens.value : [],
-)
-const hotspotsActive = computed<boolean>(() =>
-  props.annotations.length > 0 && !!props.modelPath && !loadError.value && !webglLost.value,
-)
-
-// 复用对象避免每帧分配
-const _spotVec = new THREE.Vector3()
-const _spotNdc = new THREE.Vector3()
-const _spotDir = new THREE.Vector3()
-const hotspotRaycaster = new THREE.Raycaster()
-
-/** 逐帧把热点投影为屏幕坐标并做遮挡检测（被模型挡住时淡出并禁点） */
-function updateHotspots(): void {
-  if (!hotspotsActive.value || !showAnnotations.value) return
-  if (!renderer || !camera || !currentModel) return
-
-  const width = renderer.domElement.clientWidth
-  const height = renderer.domElement.clientHeight
-  const camPos = camera.position
-
-  for (const spot of hotspotScreens.value) {
-    _spotVec.set(
-      spot.annotation.position_x,
-      spot.annotation.position_y,
-      spot.annotation.position_z,
-    )
-    const distance = _spotVec.distanceTo(camPos)
-
-    // 投影到视口外或相机背后时隐藏
-    _spotNdc.copy(_spotVec).project(camera)
-    if (_spotNdc.z > 1 || _spotNdc.x < -1.1 || _spotNdc.x > 1.1 || _spotNdc.y < -1.1 || _spotNdc.y > 1.1) {
-      spot.visible = false
-      continue
-    }
-
-    // 从相机向热点做射线检测，路径上被模型挡住则视为遮挡
-    _spotDir.copy(_spotVec).sub(camPos).normalize()
-    hotspotRaycaster.set(camPos, _spotDir)
-    hotspotRaycaster.far = Math.max(distance - 0.05, 0.01)
-    const hits = hotspotRaycaster.intersectObject(currentModel, true)
-    spot.visible = hits.length === 0
-
-    spot.x = (_spotNdc.x * 0.5 + 0.5) * width
-    spot.y = (-_spotNdc.y * 0.5 + 0.5) * height
-  }
-}
-
-function onHotspotClick(annotation: Annotation): void {
-  activeAnnotationId.value = annotation.id
-  emit('hotspot-click', annotation)
-}
-
-// 标注列表变化时重建屏幕点位（保留已激活状态）
-watch(
+const { showAnnotations, activeAnnotationId, visibleHotspots, hotspotsActive, updateHotspots, onHotspotClick } = useModelHotspots(
   () => props.annotations,
-  (list) => {
-    hotspotScreens.value = list.map((annotation) => ({
-      annotation,
-      x: 0,
-      y: 0,
-      visible: false,
-    }))
-    if (activeAnnotationId.value && !list.some((a) => a.id === activeAnnotationId.value)) {
-      activeAnnotationId.value = null
-    }
-  },
-  { immediate: true, deep: false },
-)
+  () => !!props.modelPath && !loadError.value && !webglLost.value,
+  () => ({ renderer, camera, currentModel }),
+  annotation => emit("hotspot-click", annotation),
+);
 
 let renderer: THREE.WebGLRenderer | null = null
 let scene: THREE.Scene | null = null

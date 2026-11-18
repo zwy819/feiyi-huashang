@@ -25,16 +25,24 @@
 
 ## 快速开始
 
+### 免安装运行（Windows x64）
+
+使用发行目录中的 **`一键启动.bat`** 或 **`非遗华裳.exe`**，自动打开 **http://localhost:3001/**。无需安装 Go、Node.js、pnpm 或额外运行库，前端、41 个模型、知识库与完整馆藏初始化数据均已内嵌。首次启动会在 EXE 旁生成配置与数据，后续保留使用记录。
+
+AI 功能需要在 EXE 旁 `.env` 填写服务商 Key 并联网；未配置时仍可浏览馆藏和 3D。构建与使用步骤见 [免安装启动说明](docs/免安装启动.md)。
+
 ### 一键启动（Windows）
 
-安装 Go、Node.js、pnpm 后，双击仓库根目录的 `start.bat`。脚本会自动：
+仓库根目录的 **`一键启动.bat`** 优先运行 `release/windows-amd64/` 中的免安装版，没有发行版时转到 **`开发启动.bat`**。外层工作区的中文启动脚本转到同一入口，`start.bat` 保留兼容。
+
+源码开发安装 Go 1.22+、Node.js 与 pnpm 后，双击 `开发启动.bat`。脚本会自动：
 
 1. 从 `.env.example` 创建 `server/.env`（如果不存在）；
-2. 启动 Go 后端，空数据库时自动 `-seed`；
+2. 从源码启动 Go 后端，数据库文件不存在时自动 `-seed`；
 3. 安装前端依赖（首次）并启动 Vite；
 4. 等待健康检查通过后打开 `http://localhost:5173/`。
 
-模型资产不会自动下载；需要 3D 展示时先执行 `scripts/fetch-models.ps1`。
+源码开发的模型资产不会自动下载；需要 3D 展示时先执行 `scripts/fetch-models.ps1`。免安装版已内嵌模型。
 
 ### 手动启动
 
@@ -43,7 +51,8 @@
 - Go 1.22+
 - Node.js 18+
 - pnpm 8+
-- Windows 下编译 `mattn/go-sqlite3` 需要 CGO 与 GCC（MinGW-w64）
+
+SQLite 使用纯 Go 驱动 `modernc.org/sqlite`，支持 `CGO_ENABLED=0` 构建。
 
 ### 1. 启动后端
 
@@ -52,7 +61,10 @@ cd server
 cp .env.example .env
 # 编辑 .env，至少确认 PORT / JWT_SECRET；需要 AI 时填写 AI_API_KEY
 go mod download
+# 只在首次初始化时使用；-seed 会清空并重建馆藏、收藏与模型数据
 go run ./cmd/api -seed
+# 后续启动
+go run ./cmd/api
 ```
 
 首次运行会建表、插入 40 件馆藏与示例账号，并自动建立 AI 知识库索引。默认端口 `3001`。
@@ -75,7 +87,7 @@ pnpm run dev
 模型约 230 MB，不在 Git 历史中。在仓库根目录执行：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\fetch-models.ps1
+pwsh -NoProfile -File .\scripts\fetch-models.ps1
 ```
 
 脚本从 GitHub Release 下载并校验 41 个 GLB。没有模型时，浏览、统计、AI 和报告仍可用，只是 3D 视口显示占位。详见 [docs/ASSETS.md](docs/ASSETS.md)。
@@ -86,6 +98,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\fetch-models.ps1
 
 ```dotenv
 AI_ENABLED=true
+AI_AGENT_ENABLED=true
 AI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 AI_API_KEY=你的Key
 AI_CHAT_MODEL=qwen-plus
@@ -98,7 +111,7 @@ AI_TTS_CACHE_DIR=./data/tts
 AI_MOCK_MODE=false
 ```
 
-没有 Key 时可以设置 `AI_MOCK_MODE=true`，用内置假模型验证前后端链路；评审演示应使用真实模型。语音讲解不生成新音频文件：首次播放调用 Qwen-TTS，之后按文本哈希缓存在 `server/data/tts/`；缓存不可用或接口失败时，前端回退到浏览器中文语音。
+没有 Key 时可以设置 `AI_MOCK_MODE=true`，用内置假模型验证前后端链路；评审演示应使用真实模型。`AI_AGENT_ENABLED=true` 开启模型自主工具规划，需要模型支持 OpenAI 兼容 Function Calling；关闭或不设置时，保留原有 RAG 问答。首次语音播放调用 Qwen-TTS，音频缓存在 `server/data/tts/`；缓存不可用或接口失败时，前端回退到浏览器中文语音。
 
 重建知识库（修改资料后）：
 
@@ -115,6 +128,7 @@ go run ./cmd/api -ingest
         ▼
 服务端校验 / 限流 / 日预算
         │
+        ├─ 模型自主选择只读工具（最多 2 轮、4 次调用）
         ├─ 结构化过滤（民族/省份/工艺/朝代）
         ├─ 馆藏工具（检索、详情、热点、相似、统计）
         └─ 混合检索（BM25 + 向量 + RRF）
@@ -123,7 +137,7 @@ go run ./cmd/api -ingest
 证据编号 [S1]…[S8] → 提示词 → 模型流式生成
         │
         ▼
-引用校验 → 3D 动作校验 → SSE 事件
+来源编号校验 → 3D 动作校验 → SSE 事件
 ```
 
 SSE 事件：`meta`、`tool`、`sources`、`delta`、`action`、`done`、`error`。前端用 `fetch` + `ReadableStream` 解析，不依赖 `EventSource`。
@@ -134,6 +148,7 @@ SSE 事件：`meta`、`tool`、`sources`、`delta`、`action`、`done`、`error`
 - 匿名限流（默认 10 次/分钟/IP）与全站日 Token 预算。
 - 只记录会话哈希、模型、Token、延迟、工具数量，不记录完整对话。
 - 引用编号必须能在本轮来源中找到，否则服务端删除；3D 热点 ID 必须真实存在且属于对应服饰。
+- 热点动作须由模型明确指定，或回答明确提及证据中的热点标题；不自动跳到首个热点。
 - 检索资料只作为资料处理，提示词明确抵抗资料中的注入指令。
 
 ## API 一览
@@ -164,7 +179,8 @@ SSE 事件：`meta`、`tool`、`sources`、`delta`、`action`、`done`、`error`
 nonlegacy-garment-3d/
 ├── client/                 Vue 3 前端
 │   ├── src/components/AI/  AI 面板、消息、来源抽屉、工具轨迹
-│   ├── src/composables/    useAiChat 会话状态
+│   ├── src/composables/    会话、语音与热点投影
+│   ├── src/components/3D/  模型场景、导览控制条、分享图
 │   ├── src/services/ai.ts  SSE 解析
 │   └── scripts/            Playwright 验收脚本
 ├── server/                 Go 后端
@@ -188,6 +204,7 @@ go build ./cmd/api
 # 前端
 cd client
 pnpm run typecheck
+pnpm run lint
 pnpm run build
 
 # 浏览器验收（需要本地后端与 Vite 已启动）
@@ -213,7 +230,7 @@ pnpm eval:ai -- --delay 6500 --out eval-report.json
 pnpm eval:ai -- --limit 10
 ```
 
-报告会检查来源命中、引用编号、拒答与注入禁词，输出通过率和逐题详情。评测集在 `server/knowledge/eval/questions.json`。
+报告检查民族/工艺事实关键词、实际被引用的来源、编号有效性、完整结束事件、拒答与注入禁词，并保留完整回答、来源和工具轨迹。`automatic_rate` 是自动检查通过率；逐题填写 `review.fact_correct`、`review.citation_supported` 和审核人后，才能汇总事实正确率与引用支持率。评测集在 `server/knowledge/eval/questions.json`，基于 40 件种子馆藏；改变馆藏后须更新参考答案。详见 [评测说明](docs/EVALUATION.md)。
 
 ### 无 Key 的完整链路测试（仅开发）
 
@@ -263,18 +280,22 @@ go run ./cmd/api -ingest
 
 ### 首次启动很慢
 
-`go run` 需要编译 CGO/SQLite，首次可能 1–2 分钟；前端首次 `pnpm install` 也需要时间。之后启动会明显加快。
+`go run` 首次需要编译后端及 SQLite 驱动，可能需要 1–2 分钟；前端首次 `pnpm install` 也需要时间。之后启动会明显加快。
 
 ## 已知边界
 
 - 未配置真实模型 Key 时，AI 入口会显示“未配置”，普通浏览不受影响。
 - 向量检索依赖 Embedding 接口；接口不可用时自动退化为 BM25，不影响回答流程。
-- 当前不提供照片识衣（P1）；按比赛计划，P0 稳定后再评估。
+- 照片检索入口在服饰浏览页，需要配置支持图片理解的模型；路线规划使用馆藏与热点数据。
 - 高峰期或无网络环境下，模型首 Token 可能超过 3 秒；服务端提供超时与重试状态。
 
 ## 比赛信息
 
-第九届传智杯 AI WEB 网页开发挑战赛作品。详细改进计划见 [docs/传智杯-AI-WEB-改进计划.md](docs/传智杯-AI-WEB-改进计划.md)。
+第九届传智杯 AI WEB 网页开发挑战赛作品。当前架构见 [docs/PROJECT.md](docs/PROJECT.md)，比赛交付要求见 [docs/COMPETITION.md](docs/COMPETITION.md)。
 
-- 技术文档 PDF：[在线预览](https://cdn.jsdelivr.net/gh/zwy819/feiyi-huashang@master/docs/%E9%9D%9E%E9%81%97%E5%8D%8E%E8%A3%B3-%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3.pdf) · [仓库源文件](docs/非遗华裳-技术文档.pdf)
-- 演示视频（B 站）：<https://www.bilibili.com/video/BV1d7HF6jEz8/>
+- 技术文档 PDF（14 页）：[在线预览](https://cdn.jsdelivr.net/gh/zwy819/feiyi-huashang@master/docs/%E9%9D%9E%E9%81%97%E5%8D%8E%E8%A3%B3-%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3.pdf) · [仓库文件](docs/非遗华裳-技术文档.pdf)
+- 历史演示视频（B 站，4:14）：<https://www.bilibili.com/video/BV1d7HF6jEz8/>；当前 6:31.367 正式 MP4 已在本地外层工作区 `submission/current/` 完成，1920×1080、普通话男声与内嵌中文字幕，新片链接待上传登记。
+
+## 团队
+
+第 1 组，作者：庄炜烨。

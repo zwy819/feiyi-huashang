@@ -183,7 +183,7 @@
 import { ref, onMounted, type Ref } from 'vue'
 import { submissionAPI } from '@/services/api'
 import { formatDate } from '@/utils'
-import { SubmissionStatusLabels, SubmissionStatusColors, type Submission, type SubmissionStatus } from '@/types/submission'
+import { SubmissionStatusLabels, SubmissionStatusColors, type Submission } from '@/types/submission'
 import Skeleton from '@/components/Common/Skeleton.vue'
 import EmptyState from '@/components/Common/EmptyState.vue'
 

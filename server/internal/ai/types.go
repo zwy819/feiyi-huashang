@@ -61,6 +61,7 @@ type Usage struct {
 // Status is safe to expose publicly: it never contains the API key or base URL.
 type Status struct {
 	Enabled        bool   `json:"enabled"`
+	AgentEnabled   bool   `json:"agent_enabled"`
 	Configured     bool   `json:"configured"`
 	MockMode       bool   `json:"mock_mode"`
 	Model          string `json:"model"`

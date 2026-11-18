@@ -421,7 +421,7 @@
 import { ref, onMounted, type Ref } from 'vue'
 import { adminSubmissionAPI, adminModelAPI } from '@/services/api'
 import { formatFileSize } from '@/utils'
-import { SubmissionStatusLabels, SubmissionStatusColors, type Submission, type SubmissionStatus } from '@/types/submission'
+import { SubmissionStatusLabels, SubmissionStatusColors, type Submission } from '@/types/submission'
 
 const loading = ref(true)
 const hasLoaded = ref(false);

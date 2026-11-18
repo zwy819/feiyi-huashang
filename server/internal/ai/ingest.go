@@ -75,6 +75,10 @@ func (ing *Ingestor) Ingest(ctx context.Context, force bool, embedder Embedder) 
 		return stats, err
 	}
 
+	embeddingModel := ""
+	if embedder != nil {
+		embeddingModel = embedder.EmbeddingModel()
+	}
 	pending := make([]pendingDocument, 0, len(docs))
 	for _, doc := range docs {
 		id, checksum, found, err := ing.store.GetDocumentMeta(ctx, doc.DocKey)
@@ -82,7 +86,11 @@ func (ing *Ingestor) Ingest(ctx context.Context, force bool, embedder Embedder) 
 			return stats, err
 		}
 		if found && checksum == doc.Checksum {
-			if n, err := ing.store.ChunkCount(ctx, id); err == nil && n > 0 {
+			current, err := ing.store.ChunksCurrent(ctx, id, embeddingModel)
+			if err != nil {
+				return stats, err
+			}
+			if current {
 				stats.Skipped++
 				continue
 			}

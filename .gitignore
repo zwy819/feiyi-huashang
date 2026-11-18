@@ -55,3 +55,9 @@ server/data/tts/
 
 # 浏览器验收截图
 client/test-results/
+client/eval-report*.json
+server/.run/
+
+# Single-executable generated resources and output
+server/internal/portable/assets/
+release/

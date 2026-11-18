@@ -7,7 +7,7 @@
 **非遗华裳** — 中国非物质文化遗产服饰 3D 数字博物馆 + AI 导览 Agent「织语」。
 
 - 前端：Vue 3 + TypeScript + Vue Router + Vite + TailwindCSS + Three.js + ECharts。
-- 后端：Go 1.22+ / Gin / SQLite / JWT / bcrypt / gofpdf。
+- 后端：Go 1.22+ / Gin / SQLite / JWT / bcrypt / gofpdf；SQLite 使用纯 Go 驱动 modernc.org/sqlite，支持 CGO_ENABLED=0 构建。
 - AI：OpenAI 兼容模型；Go 进程内 RAG（字符二元组 BM25 + Embedding + RRF）；SSE 流式回答；引用与 3D 动作服务端校验。
 - 数据：40 件馆藏、26 个民族、22 个省级地区、36 门工艺、119 个 3D 热点、26 篇带来源资料。
 
@@ -46,7 +46,7 @@ AI 请求流程：
 
 1. 前端带 `message + history + context` 调用 `POST /api/ai/chat`。
 2. 服务端限流、预算检查、页面上下文校验。
-3. 结构化过滤 + 馆藏工具 + 混合检索，生成 `[S1]…[S8]` 证据。
+3. 模型 Function Calling（最多2轮、4次只读工具）+ 结构化过滤 + 混合检索，生成 `[S1]…[S8]` 证据。
 4. 模型流式生成；SSE 发送 `meta/tool/sources/delta/action/done/error`。
 5. 服务端清理非法引用与非法 3D 动作；`done.content` 为最终文本。
 
@@ -73,7 +73,7 @@ AI 请求流程：
 
 ## 提交规范
 
-使用 Angular 风格：`<type>(<scope>): <subject>`，一个提交只做一件语义独立的事。每次改动后：
+使用 Angular 风格：`<type>(<scope>): <subject>`，一个提交只做一件语义独立的事。按用户要求提交或推送时使用：
 
 ```bash
 git add <files>

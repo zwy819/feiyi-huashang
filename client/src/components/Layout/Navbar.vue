@@ -21,11 +21,10 @@
             v-for="item in navItems"
             :key="item.to"
             :to="item.to"
-            :exact="item.to === '/'"
             class="px-4 py-2 rounded-mogao text-sm font-medium transition-all duration-200"
-            active-class="bg-mogao-cinnabar text-white shadow-mogao"
+            active-class=""
             :class="$route.path === item.to
-              ? ''
+              ? 'bg-mogao-cinnabar text-white shadow-mogao'
               : 'text-mogao-lapis-700 hover:bg-mogao-ochre-50 hover:text-mogao-cinnabar'"
           >
             {{ item.label }}
@@ -97,7 +96,6 @@
             v-for="item in navItems"
             :key="item.to"
             :to="item.to"
-            :exact="item.to === '/'"
             @click="mobileOpen = false"
             class="block px-4 py-2.5 rounded-mogao text-sm font-medium transition"
             :class="$route.path === item.to

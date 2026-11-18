@@ -181,7 +181,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, type Ref } from 'vue'
-import { garmentAPI, annotationAPI, adminAnnotationAPI } from '@/services/api'
+import { garmentAPI, adminAnnotationAPI } from '@/services/api'
 import ModelViewer from '@/components/3D/ModelViewer.vue'
 import Modal from '@/components/Common/Modal.vue'
 import type { Annotation, AnnotationPayload } from '@/types/annotation'

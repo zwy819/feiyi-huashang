@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 func NewSQLiteDB(dbPath string) (*sql.DB, error) {
@@ -16,7 +16,7 @@ func NewSQLiteDB(dbPath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("创建数据库目录失败: %w", err)
 	}
 
-	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_foreign_keys=ON")
+	db, err := sql.Open("sqlite", dbPath+"?_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)")
 	if err != nil {
 		return nil, fmt.Errorf("打开数据库失败: %w", err)
 	}

@@ -15,6 +15,7 @@ import (
 	"nonlegacy-garment-3d/server/internal/config"
 	"nonlegacy-garment-3d/server/internal/database"
 	"nonlegacy-garment-3d/server/internal/model"
+	"nonlegacy-garment-3d/server/internal/portable"
 	"nonlegacy-garment-3d/server/internal/router"
 	"nonlegacy-garment-3d/server/internal/tts"
 
@@ -24,7 +25,11 @@ import (
 func main() {
 	seed := flag.Bool("seed", false, "插入种子数据")
 	ingest := flag.Bool("ingest", false, "强制重建 AI 知识库")
+	openBrowser := flag.Bool("open", portable.Enabled, "启动后打开浏览器（单文件版）")
 	flag.Parse()
+	if err := portable.Prepare(); err != nil {
+		log.Fatalf("运行资源初始化失败: %v", err)
+	}
 
 	// 加载配置
 	cfg := config.Load()
@@ -45,6 +50,17 @@ func main() {
 	if err := database.RunMigrations(db); err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}
+	if portable.Enabled {
+		var count int
+		if err := db.QueryRow("SELECT COUNT(*) FROM garments").Scan(&count); err != nil {
+			log.Fatalf("读取馆藏状态失败: %v", err)
+		}
+		if count == 0 {
+			if err := portable.Seed(db); err != nil {
+				log.Fatalf("初始化馆藏失败: %v", err)
+			}
+		}
+	}
 
 	// 初始化 Store
 	garmentStore := model.NewGarmentStore(db)
@@ -58,7 +74,7 @@ func main() {
 	quizStore := model.NewQuizStore(db)
 
 	// 插入种子数据
-	if *seed {
+	if *seed && !portable.Enabled {
 		seedData(db, userStore, garmentStore, modelStore, dailyPickStore, cfg)
 	}
 
@@ -75,6 +91,13 @@ func main() {
 
 	// 设置路由
 	r := router.SetupRouter(db, garmentStore, modelStore, userStore, favoriteStore, dailyPickStore, submissionStore, commentStore, annotationStore, quizStore, aiService, ttsService, cfg)
+	portable.Mount(r)
+	if portable.Enabled {
+		if err := portable.Run(r, cfg, *openBrowser); err != nil {
+			log.Fatalf("网站启动失败: %v", err)
+		}
+		return
+	}
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%s", cfg.Port)

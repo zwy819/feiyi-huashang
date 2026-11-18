@@ -23,6 +23,7 @@ type Config struct {
 	// AI docent. Keys are only read from the environment (or the ignored
 	// server/.env file); they are never exposed by the status endpoint.
 	AIEnabled          bool
+	AIAgentEnabled     bool
 	AIBaseURL          string
 	AIAPIKey           string
 	AIChatModel        string
@@ -58,6 +59,7 @@ func Load() *Config {
 		MaxImageUploadSize: getEnvInt64("MAX_IMAGE_UPLOAD_SIZE", 10485760),
 
 		AIEnabled:          getEnvBool("AI_ENABLED", true),
+		AIAgentEnabled:     getEnvBool("AI_AGENT_ENABLED", false),
 		AIBaseURL:          strings.TrimRight(getEnv("AI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"), "/"),
 		AIAPIKey:           strings.TrimSpace(getEnv("AI_API_KEY", "")),
 		AIChatModel:        getEnv("AI_CHAT_MODEL", "qwen-plus"),

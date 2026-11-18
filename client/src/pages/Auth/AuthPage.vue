@@ -129,7 +129,7 @@ import { ref, onMounted, type Ref } from 'vue'
 import { useRouter, type Router } from 'vue-router'
 import { useAuth } from '@/composables'
 import { authAPI } from '@/services/api'
-import type { LoginForm, RegisterForm, User } from '@/types/user'
+import type { User } from '@/types/user'
 
 interface AuthForm {
   username: string

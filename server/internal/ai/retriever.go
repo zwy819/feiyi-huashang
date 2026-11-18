@@ -81,7 +81,7 @@ func (r *Retriever) Search(ctx context.Context, query string, topK int) []Retrie
 			log.Printf("[AI][RAG] 查询向量化失败，仅使用 BM25: %v", err)
 		} else if len(vecs) == 1 && len(vecs[0]) > 0 {
 			for _, chunk := range chunks {
-				if len(chunk.Embedding) == 0 {
+				if len(chunk.Embedding) == 0 || chunk.EmbeddingModel != r.embedder.EmbeddingModel() || len(chunk.Embedding) != len(vecs[0]) {
 					continue
 				}
 				score := cosine(vecs[0], chunk.Embedding)

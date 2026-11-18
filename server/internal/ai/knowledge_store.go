@@ -161,8 +161,10 @@ func (s *KnowledgeStore) GetDocumentMeta(ctx context.Context, docKey string) (id
 	return id, checksum, true, nil
 }
 
-func (s *KnowledgeStore) ChunkCount(ctx context.Context, documentID int64) (int, error) {
-	var n int
-	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM knowledge_chunks WHERE document_id = ?`, documentID).Scan(&n)
-	return n, err
+func (s *KnowledgeStore) ChunksCurrent(ctx context.Context, documentID int64, embeddingModel string) (bool, error) {
+	var total, current int
+	err := s.db.QueryRowContext(ctx, `
+		SELECT COUNT(*), COALESCE(SUM(CASE WHEN embedding != '' AND embedding_model = ? THEN 1 ELSE 0 END), 0)
+		FROM knowledge_chunks WHERE document_id = ?`, embeddingModel, documentID).Scan(&total, &current)
+	return total > 0 && (embeddingModel == "" || current == total), err
 }

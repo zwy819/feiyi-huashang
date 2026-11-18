@@ -7,14 +7,14 @@
     >
       <span class="flex items-center gap-2 text-xs text-mogao-lapis-600">
         <span class="w-1.5 h-1.5 rounded-full bg-mogao-malachite-500" />
-        已完成 {{ tools.length }} 次馆藏检索
+        工具调用 {{ tools.length }} 次 · 完成 {{ tools.filter(tool => tool.status === 'done').length }} 次<span v-if="tools.some(tool => tool.status === 'error')">，失败 {{ tools.filter(tool => tool.status === 'error').length }} 次</span>
       </span>
       <span class="text-[11px] text-mogao-ochre-500">{{ expanded ? '收起' : '查看过程' }}</span>
     </button>
     <Transition name="trace">
       <ol v-if="expanded" class="px-3 pb-3 space-y-2 border-t border-mogao-ochre-200 pt-2">
         <li v-for="(tool, index) in tools" :key="`${tool.name}-${index}`" class="flex items-start gap-2 text-[11px]">
-          <span class="mt-0.5 text-mogao-gold-600">{{ toolIcon(tool.name) }}</span>
+          <span class="mt-0.5" :class="tool.status === 'error' ? 'text-mogao-cinnabar' : 'text-mogao-gold-600'">{{ tool.status === 'error' ? '!' : toolIcon(tool.name) }}</span>
           <span class="flex-1">
             <span class="text-mogao-lapis-700">{{ toolLabel(tool.name) }}</span>
             <span class="text-mogao-ochre-500"> · {{ tool.summary }}</span>
@@ -36,6 +36,8 @@ const expanded = ref(false)
 function toolLabel(name: string): string {
   switch (name) {
     case 'search_garments': return '检索馆藏'
+    case 'get_garment_detail': return '查看馆藏档案'
+    case 'resolve_spatial_context': return '定位当前热点'
     case 'get_annotations': return '查找 3D 热点'
     case 'find_similar': return '寻找相似馆藏'
     case 'get_statistics': return '查询馆藏统计'

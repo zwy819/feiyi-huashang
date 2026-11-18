@@ -15,7 +15,7 @@ import type { User } from '@/types/user'
  */
 export function useFetch<T>(
   fetcher: () => Promise<T>,
-  deps: Ref[] = [],
+  _deps: Ref[] = [],
   immediate = true,
 ) {
   const data = ref<T | null>(null) as Ref<T | null>

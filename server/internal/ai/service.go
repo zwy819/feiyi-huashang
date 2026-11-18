@@ -117,6 +117,7 @@ func (s *Service) Status(ctx context.Context) Status {
 	chunks, _ := s.store.CountChunks(ctx)
 	status := Status{
 		Enabled:        s.cfg.AIEnabled,
+		AgentEnabled:   s.cfg.AIAgentEnabled,
 		Configured:     s.Configured() || s.cfg.AIMockMode,
 		MockMode:       s.cfg.AIMockMode,
 		Model:          s.cfg.AIChatModel,
@@ -131,7 +132,7 @@ func (s *Service) Status(ctx context.Context) Status {
 	case s.provider == nil:
 		status.Message = "未配置 AI_API_KEY，普通浏览不受影响"
 	default:
-		status.Message = "已连接 " + s.cfg.AIChatModel
+		status.Message = "已配置 " + s.cfg.AIChatModel
 	}
 	return status
 }
@@ -197,6 +198,22 @@ func (s *Service) Chat(ctx context.Context, req ChatRequest, clientKey string, e
 
 func (s *Service) chat(ctx context.Context, req ChatRequest, message, conversationID, sessionHash, messageID string, emit EmitFunc) error {
 	start := time.Now()
+	if answer := scopeRefusal(message); answer != "" {
+		if err := emit("sources", []Source{}); err != nil {
+			return err
+		}
+		if err := streamText(emit, answer); err != nil {
+			return err
+		}
+		if err := emit("done", map[string]any{
+			"conversation_id": conversationID, "message_id": messageID, "content": answer,
+			"usage": Usage{}, "latency_ms": time.Since(start).Milliseconds(), "sources_used": []string{},
+		}); err != nil {
+			return err
+		}
+		_ = s.usage.Record(ctx, UsageRecord{SessionHash: sessionHash, Endpoint: "chat", Model: s.cfg.AIChatModel, LatencyMS: time.Since(start).Milliseconds(), Status: "refused"})
+		return nil
+	}
 	toolCalls := 0
 	var contextGarment *model.Garment
 	var contextAnnotation *model.Annotation
@@ -264,13 +281,30 @@ func (s *Service) chat(ctx context.Context, req ChatRequest, message, conversati
 		})
 	}
 
+	var planningUsage Usage
+	if s.provider != nil && s.cfg.AIAgentEnabled {
+		items, used, calls, err := s.collectAgentEvidence(ctx, req, history, emit)
+		if err != nil {
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				return &ChatError{Code: 50401, Message: "AI 工具规划超时，请重试", Retryable: true}
+			}
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			log.Printf("[AI][Agent] provider error: %v", err)
+			return &ChatError{Code: 50201, Message: "AI 工具规划暂时不可用，请确认模型支持 Function Calling 后重试", Retryable: true}
+		}
+		evidence = append(evidence, items...)
+		planningUsage = used
+		toolCalls += calls
+	}
+
 	// Statistics questions are answered from SQL aggregates, not model guesses.
 	statsIntent := statsDimension(message)
 	if statsIntent != "" {
 		toolStart := time.Now()
-		items, err := s.toolbox.GetStatistics(ctx, statsIntent)
+		summary, err := s.toolbox.StatisticsSummary(ctx, statsIntent, statsMode(message), filters)
 		if err == nil {
-			summary := statsSummary(statsIntent, items)
 			evidence = append(evidence, evidenceItem{
 				Source: Source{
 					Type: "统计", Title: "馆藏统计 · " + dimensionLabel(statsIntent),
@@ -279,7 +313,7 @@ func (s *Service) chat(ctx context.Context, req ChatRequest, message, conversati
 				Content: summary,
 			})
 			toolCalls++
-			if err := s.emitTool(emit, "get_statistics", fmt.Sprintf("按%s统计，返回 %d 组", dimensionLabel(statsIntent), len(items)), toolStart); err != nil {
+			if err := s.emitTool(emit, "get_statistics", summary, toolStart); err != nil {
 				return err
 			}
 		}
@@ -476,8 +510,10 @@ func (s *Service) chat(ctx context.Context, req ChatRequest, message, conversati
 	if usage.CompletionTokens == 0 {
 		usage.CompletionTokens = estimateTokens(finalText)
 	}
+	usage.PromptTokens += planningUsage.PromptTokens
+	usage.CompletionTokens += planningUsage.CompletionTokens
 	usage.TotalTokens = usage.PromptTokens + usage.CompletionTokens
-	action := s.resolveAction(ctx, highlightID, contextAnnotation, contextGarment, evidence, finalText)
+	action := s.resolveAction(ctx, highlightID, evidence, finalText)
 	if action != nil {
 		if err := emit("action", action); err != nil {
 			return err
@@ -506,7 +542,7 @@ func (s *Service) emitTool(emit EmitFunc, name, summary string, start time.Time)
 	})
 }
 
-func (s *Service) resolveAction(ctx context.Context, highlightID int64, contextAnnotation *model.Annotation, contextGarment *model.Garment, evidence []evidenceItem, answer string) *Action {
+func (s *Service) resolveAction(ctx context.Context, highlightID int64, evidence []evidenceItem, answer string) *Action {
 	if highlightID > 0 {
 		if a, err := s.toolbox.annotationStore.GetByID(highlightID); err == nil {
 			for _, item := range evidence {
@@ -516,25 +552,10 @@ func (s *Service) resolveAction(ctx context.Context, highlightID int64, contextA
 			}
 		}
 	}
-	if contextAnnotation != nil {
-		return &Action{Type: "highlight_annotation", GarmentID: contextAnnotation.GarmentID, AnnotationID: contextAnnotation.ID, Label: "在 3D 中查看「" + contextAnnotation.Title + "」"}
-	}
 	for _, item := range evidence {
 		if item.Source.AnnotationID > 0 && item.Source.Title != "" && strings.Contains(answer, strings.TrimPrefix(item.Source.Title, "3D 讲解 · ")) {
 			if a, err := s.toolbox.annotationStore.GetByID(item.Source.AnnotationID); err == nil {
 				return &Action{Type: "highlight_annotation", GarmentID: a.GarmentID, AnnotationID: a.ID, Label: "在 3D 中查看「" + a.Title + "」"}
-			}
-		}
-	}
-	// When the user is already on a garment page and asks about its details,
-	// offer the first relevant hotspot even if the model forgot the marker.
-	// IDs still come from the server's evidence, never from model output.
-	if contextGarment != nil {
-		for _, item := range evidence {
-			if item.Source.AnnotationID > 0 && item.Source.GarmentID == contextGarment.ID {
-				if a, err := s.toolbox.annotationStore.GetByID(item.Source.AnnotationID); err == nil {
-					return &Action{Type: "highlight_annotation", GarmentID: a.GarmentID, AnnotationID: a.ID, Label: "在 3D 中查看「" + a.Title + "」"}
-				}
 			}
 		}
 	}
@@ -620,10 +641,12 @@ func streamText(emit EmitFunc, text string) error {
 }
 
 func statsDimension(q string) string {
-	if !containsAny(q, []string{"统计", "分布", "最多", "数量", "排名", "多少个", "哪几个", "哪个省", "哪个民族", "哪些民族", "哪些工艺"}) {
+	if !containsAny(q, []string{"统计", "分布", "最多", "最常见", "数量", "排名", "多少", "几种", "几件", "哪几个", "哪个省", "哪个民族", "哪些民族", "哪些工艺"}) {
 		return ""
 	}
 	switch {
+	case containsAny(q, []string{"多少件", "几件", "馆藏数量", "服饰数量", "藏品数量"}) && !containsAny(q, []string{"最多", "排名", "前"}):
+		return "garment"
 	case containsAny(q, []string{"省", "地区", "地域", "分布"}):
 		return "province"
 	case containsAny(q, []string{"民族"}):
@@ -632,9 +655,21 @@ func statsDimension(q string) string {
 		return "craft"
 	case containsAny(q, []string{"朝代", "年代"}):
 		return "dynasty"
+	case containsAny(q, []string{"馆藏", "服饰", "藏品"}):
+		return "garment"
 	default:
 		return ""
 	}
+}
+
+func statsMode(q string) string {
+	if containsAny(q, []string{"最多", "最常见", "排名", "前", "分布", "哪些", "哪几个"}) {
+		return "ranking"
+	}
+	if containsAny(q, []string{"多少", "总数", "总共", "一共", "几种", "几件"}) {
+		return "total"
+	}
+	return "ranking"
 }
 
 func statsSummary(dim string, items []StatsItem) string {
@@ -660,6 +695,8 @@ func dimensionLabel(dim string) string {
 		return "工艺"
 	case "dynasty":
 		return "朝代"
+	case "garment":
+		return "服饰"
 	default:
 		return dim
 	}
